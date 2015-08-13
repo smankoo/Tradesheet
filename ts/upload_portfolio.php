@@ -76,19 +76,14 @@
                 while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
 
                     // inserting escape characters (cleansing input)
-                    $i = $i + 1;
-                    
-                    // Skip first row, because it contains headers
-                    if ( $i == 1 ){
-                        continue;
-                    }
-                    
+
                     foreach ($data as &$value) {
                         $value = addslashes ($value);
                     }
 
-                    $import="INSERT into stocks(bloomberg_fin_code, google_fin_code, description, country, isin, currency) values('$data[0]','$data[1]','$data[2]','$data[3]','$data[4]','$data[5]')";
+                    $import="INSERT into portfolio() values('')";
 
+                    //$i = $i + 1;
                     //echo $i . " about to run the following query\n";
                     //echo $import . "\n";
 

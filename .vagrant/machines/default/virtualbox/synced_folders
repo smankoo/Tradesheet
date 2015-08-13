@@ -1,0 +1,1 @@
+{"virtualbox":{"/vagrant":{"guestpath":"/vagrant","hostpath":"C:/Users/Sumeet/lamp","disabled":false},"/var/www/html/ts":{"guestpath":"/var/www/html/ts","hostpath":"C:/Users/Sumeet/lamp/ts","disabled":false}}}

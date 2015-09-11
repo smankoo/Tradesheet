@@ -221,6 +221,10 @@
                             <div class="panel-heading">
                                 <h3>Tradesheet</h3></div>
                             <div class="panel-body">
+                                <p class="text-right">
+                                <button type="button" class="btn btn-default" onclick="addRow();">Add Row</button>
+                                <button type="button" class="btn btn-default" onclick="test(1);">|| Test ||</button>
+                                </p>
                                 <table id="stocks_table" class="table table-striped table-bordered">
                                     <thead>
                                         <tr>
@@ -288,11 +292,46 @@
                                     </tbody>
                                 </table>
                                 
-                                <table id="stocks_table" class="table table-striped table-bordered">
+                                <table id="purchase_table" class="table table-striped table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Purchase Table</th>
+                                            <th>Cash at Hand</th>
+                                            <th>Sheet Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>CAD</td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td>USD</td>
+                                            <td></td>
+                                            <td></td>
+                                        </tr>
+                                    </tbody>
                                 </table>
                                 
-                                <button type="button" class="btn btn-default" onclick="addRow();">Add Row</button>
-                                <button type="button" class="btn btn-default" onclick="test(1);">|| Test ||</button>
+                                <table id="sale_table" class="table table-striped table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Sale Table</th>
+                                            <th>Sheet Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>CAD</td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td>USD</td>
+                                            <td></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                         <!--.tab-pane -->

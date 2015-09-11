@@ -6,112 +6,167 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
-    <title>Tradesheet Project</title>
+    <title>Tradesheet Project (Alpha)</title>
     <link rel="shortcut icon" href="">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
-
-    <!--javascript for the ajax upload-->
-    <script type="text/javascript" src="ajax/js/jquery-1.10.2.min.js"></script>
-    <script type="text/javascript" src="ajax/js/jquery.form.min.js"></script>
-
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="bootstrap/css/bootstrap-theme.min.css">
 
     <script type="text/javascript">
-        $(document).ready(function () {
-            var options = {
-                target: '#output', // target element(s) to be updated with server response 
-                beforeSubmit: beforeSubmit, // pre-submit callback 
-                success: afterSuccess, // post-submit callback 
-                uploadProgress: OnProgress, //upload progress callback 
-                resetForm: true // reset the form after successful submit 
-            };
+        // Javascript to enable link to tab
+        var hash = document.location.hash;
+        var prefix = "tab_";
+        if (hash) {
+            $('.nav-tabs a[href=' + hash.replace(prefix, "") + ']').tab('show');
+        }
 
-            $('#MyUploadForm').submit(function () {
-                $(this).ajaxSubmit(options);
-                // always return false to prevent standard browser submit and page navigation 
-                return false;
-            });
-
-
-            //function after succesful file upload (when server response)
-            function afterSuccess() {
-                $('#submit-btn').show(); //hide submit button
-                $('#loading-img').hide(); //hide submit button
-                $('#progressbox').delay(1000).fadeOut(); //hide progress bar
-
-            }
-
-            //function to check file size before uploading.
-            function beforeSubmit() {
-                //check whether browser fully supports all File API
-                if (window.File && window.FileReader && window.FileList && window.Blob) {
-
-                    if (!$('#FileInput').val()) //check empty input filed
-                    {
-                        $("#output").html("Are you kidding me?");
-                        return false
-                    }
-
-                    var fsize = $('#FileInput')[0].files[0].size; //get file size
-                    var ftype = $('#FileInput')[0].files[0].type; // get file type
-
-
-                    //allow file types 
-                    switch (ftype) {
-                    case 'image/png':
-                    case 'image/gif':
-                    case 'image/jpeg':
-                    case 'image/pjpeg':
-                    case 'text/plain':
-                    case 'text/html':
-                    case 'application/x-zip-compressed':
-                    case 'application/pdf':
-                    case 'application/msword':
-                    case 'application/vnd.ms-excel':
-                    case 'video/mp4':
-                        break;
-                    default:
-                        $("#output").html("<b>" + ftype + "</b> Unsupported file type!");
-                        return false
-                    }
-
-                    //Allowed file size is less than 5 MB (1048576)
-                    if (fsize > 5242880) {
-                        $("#output").html("<b>" + bytesToSize(fsize) + "</b> Too big file! <br />File is too big, it should be less than 5 MB.");
-                        return false
-                    }
-
-                    $('#submit-btn').hide(); //hide submit button
-                    $('#loading-img').show(); //hide submit button
-                    $("#output").html("");
-                } else {
-                    //Output error to older unsupported browsers that doesn't support HTML5 File API
-                    $("#output").html("Please upgrade your browser, because your current browser lacks some new features we need!");
-                    return false;
-                }
-            }
-
-            //progress bar function
-            function OnProgress(event, position, total, percentComplete) {
-                //Progress bar
-                $('#progressbox').show();
-                $('#progressbar').width(percentComplete + '%') //update progressbar percent complete
-                $('#statustxt').html(percentComplete + '%'); //update status text
-                if (percentComplete > 50) {
-                    $('#statustxt').css('color', '#000'); //change status text to white after 50%
-                }
-            }
-
-            //function to format bites bit.ly/19yoIPO
-            function bytesToSize(bytes) {
-                var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-                if (bytes == 0) return '0 Bytes';
-                var i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
-                return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
-            }
-
+        // Change hash for page-reload
+        $('.nav-tabs a').on('shown', function (e) {
+            window.location.hash = e.target.hash.replace("#", "#" + prefix);
         });
     </script>
+
+    <script type="text/javascript">
+        function loadStocks() {
+            if (document.getElementById('stocks_frame').src != location.href + "stocks_table.php") {
+                document.getElementById('stocks_frame').src = "stocks_table.php";
+            }
+        }
+    </script>
+
+    <script type="text/javascript">
+        var row_num = 1;
+        function addRow() {
+            row_num++;
+            var table = document.getElementById("stocks_table");
+            var row = table.insertRow(document.getElementById("stocks_table").rows.length);
+            var cell1 = row.insertCell(0);
+            var cell2 = row.insertCell(1);
+            var cell3 = row.insertCell(2);
+            var cell4 = row.insertCell(3);
+            var cell5 = row.insertCell(4);
+            var cell6 = row.insertCell(5);
+            var cell7 = row.insertCell(6);
+            var cell8 = row.insertCell(7);
+            var cell9 = row.insertCell(8);
+            var cell10 = row.insertCell(9);
+            var cell11 = row.insertCell(10);
+            
+            cell1.innerHTML = "<select class=\"combobox\" id=\"side" + row_num + "\" onchange=\"updateMaxShares(" + row_num + ");\"> <option value=\"\"></option> <option value=\"buy\">Buy</option> <option value=\"sell\">Sell</option> </select> ";
+            cell2.innerHTML = "<input class=\"form-control\" id=\"shares" + row_num + "\" type=\"number\" min=\"0\" onblur=\"validateShareCount(" + row_num + ");\" onchange=\"updateRowTotal(" + row_num + ");\">";
+
+            cell3.innerHTML = "<input class=\"form-control\" id=\"maxShares" + row_num + "\" value=\"\" disabled>";
+            cell4.innerHTML = "<input class=\"form-control\" id=\"isinNumber" + row_num + "\" type=\"text\">";
+            cell5.innerHTML = "<input class=\"form-control\" id=\"securityName" + row_num + "\" type=\"text\">";
+            cell6.innerHTML = "<input class=\"form-control\" id=\"symbol" + row_num + "\" type=\"text\" onblur=\"populateStockInfo(" + row_num + ", document.getElementById(&quot;symbol" + row_num + "&quot;).value);\">";
+            cell7.innerHTML = "<select class=\"combobox\" id=\"country" + row_num + "\"> <option value=\"\"></option> <option value=\"usa\">USA</option> <option value=\"canada\">Canada</option> </select>";
+            cell8.innerHTML = "<select class=\"combobox\" id=\"orderType" + row_num + "\"> <option value=\"\"></option> <option value=\"day\">Day</option> <option value=\"gtc\">GTC</option> </select>";
+            cell9.innerHTML = "<input class=\"form-control\" id=\"limitPrice" + row_num + "\" type=\"number\" value=\"0\" onchange=\"updateRowTotal(" + row_num + ");\">";
+            cell10.innerHTML = "<input class=\"form-control\" id=\"account" + row_num + "\" type=\"text\" onblur=\"testTextboxLeaveEvent(" + row_num + ");\">";
+            cell11.innerHTML = "<input class=\"form-control\" id=\"total" + row_num + "\" type=\"text\">";
+
+        }
+
+        function updateRowTotal(rowid) {
+            var sharesCell = document.getElementById('shares' + rowid);
+            var limitpriceCell = document.getElementById('limitPrice' + rowid);
+            var totalValue = sharesCell.value * limitpriceCell.value;
+            var totalCell = document.getElementById('total' + rowid);
+            totalCell.value = totalValue;
+         }
+
+        function updateMaxShares(rowid) {
+            var sideCell = document.getElementById("side" + rowid);
+            var maxSharesCell = document.getElementById("maxShares" + rowid);
+
+            if (sideCell.value == "buy") {
+                maxSharesCell.value = "N/A";
+            } else if (sideCell.value == "sell") {
+                populateMaxShares(rowid);
+            } else {
+                maxSharesCell.value = "";
+            }
+            //alert("Hello! I am an alert box!!");
+        }
+
+        function populateStockInfo(rowid,str) {
+            if (str == "") {
+                document.getElementById("securityName" + rowid).value = "";
+                document.getElementById("isinNumber" + rowid).value = "";
+                document.getElementById("country" + rowid).value = "";
+                return;
+            } else {
+                if (window.XMLHttpRequest) {
+                    // code for IE7+, Firefox, Chrome, Opera, Safari
+                    xmlhttp = new XMLHttpRequest();
+                } else {
+                    // code for IE6, IE5
+                    xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+                }
+                xmlhttp.onreadystatechange = function () {
+                    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                        var responseJson = JSON.parse(xmlhttp.responseText);
+                        
+                        document.getElementById("securityName" + rowid).value = responseJson.description;
+                        document.getElementById("isinNumber" + rowid).value = responseJson.isin;
+                        document.getElementById("country" + rowid).value = responseJson.country.toLowerCase();
+                        
+                        
+                        if (document.getElementById("side" + rowid).value == "sell" && ( document.getElementById("maxShares" + rowid).value == "" || document.getElementById("maxShares" + rowid).value == "0" ) ) {
+                            populateMaxShares(rowid);
+                        }
+                    }
+                }
+               
+                xmlhttp.open("GET", "getSecurityInfo.php?sym=" + str, true);
+                xmlhttp.send();
+            }
+        }
+        
+        function populateMaxShares(rowid) {
+            var str = document.getElementById("isinNumber" + rowid).value;
+            if (str == "") {
+                document.getElementById("maxShares" + rowid).value = "0";
+                return;
+            } else {
+                if (window.XMLHttpRequest) {
+                    // code for IE7+, Firefox, Chrome, Opera, Safari
+                    xmlhttp = new XMLHttpRequest();
+                } else {
+                    // code for IE6, IE5
+                    xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+                }
+                xmlhttp.onreadystatechange = function () {
+                    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                        var responseJson = JSON.parse(xmlhttp.responseText);
+                        document.getElementById("maxShares" + rowid).value = responseJson.shares_par;
+                        document.getElementById("shares" + rowid).max = responseJson.shares_par;
+                    }
+                }
+                //alert("Sending : getSecurityInfo.php?sym=" + str);
+                xmlhttp.open("GET", "getPortInfo.php?isin=" + str, true);
+                xmlhttp.send();
+            }
+        }
+        
+        function validateShareCount(rowid) {
+            var maxShares = parseInt(document.getElementById("maxShares" + rowid).value,10);
+            var shareCount = parseInt(document.getElementById("shares" + rowid).value,10);
+            if ( !shareCount ) {
+                return;
+            }
+            if ( shareCount > maxShares ) {
+                alert("Number of shares is higher than the number of shares you own");
+                document.getElementById("shares" + rowid).focus();
+                document.getElementById("shares" + rowid).select();
+            }
+        }
+        
+        function test(rowid) {
+            alert("hello" + rowid);
+        }
+
+    </script>
+
 
     <style>
         body {
@@ -121,27 +176,6 @@
         .starter-template {
             padding: 40px 15px;
             text-align: center;
-        }
-        
-        .btn-file {
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .btn-file input[type=file] {
-            position: absolute;
-            top: 0;
-            right: 0;
-            min-width: 100%;
-            min-height: 100%;
-            font-size: 100px;
-            text-align: right;
-            filter: alpha(opacity=0);
-            opacity: 0;
-            outline: none;
-            background: white;
-            cursor: inherit;
-            display: block;
         }
     </style>
 
@@ -161,14 +195,14 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="#">Tradesheet Tool</a>
+                <a class="navbar-brand" href="#">Tradesheet Tool (Alpha)</a>
             </div>
 
             <div class="collapse navbar-collapse">
                 <ul class="nav navbar-nav">
-                    <li class="active"><a href="#tradesheet"  data-toggle="tab">Home</a></li>
+                    <li class="active"><a href="#tradesheet" data-toggle="tab">Home</a></li>
                     <li><a href="#students" data-toggle="tab">Students</a></li>
-                    <li><a href="#stocks" data-toggle="tab">Stocks</a></li>
+                    <li><a href="#stocks" data-toggle="tab" onclick="loadStocks();">Stocks</a></li>
                     <li><a href="#portfolio" data-toggle="tab">Portfolio</a></li>
                 </ul>
             </div>
@@ -178,7 +212,7 @@
 
     <div class="container">
         <div class="starter-template">
-            <div class="col-lg-12">
+            <div class="">
                 <div class="panel panel-default">
 
                     <div id="my-tab-content" class="tab-content">
@@ -187,7 +221,78 @@
                             <div class="panel-heading">
                                 <h3>Tradesheet</h3></div>
                             <div class="panel-body">
-
+                                <table id="stocks_table" class="table table-striped table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>SIDE</th>
+                                            <th>SHARES</th>
+                                            <th>Max Shares</th>
+                                            <th>ISIN Number</th>
+                                            <th>NAME</th>
+                                            <th>SYMBOL</th>
+                                            <th>COUNTRY</th>
+                                            <th>ORDER TYPE</th>
+                                            <th>LIMITPRICE</th>
+                                            <th>ACCOUNT</th>
+                                            <th>TOTAL</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <select class="combobox" id="side1" onchange="updateMaxShares(1);">
+                                                    <option value=""></option>
+                                                    <option value="buy">Buy</option>
+                                                    <option value="sell">Sell</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <input class="form-control" id="shares1" type="number" min="0" onblur="validateShareCount(1);" onchange="updateRowTotal(1);">
+                                            </td>
+                                            <td>
+                                                <input class="form-control" id="maxShares1" value="" disabled>
+                                            </td>
+                                            <td>
+                                                <input class="form-control" id="isinNumber1" type="text">
+                                            </td>
+                                            <td>
+                                                <input class="form-control" id="securityName1" type="text">
+                                            </td>
+                                            <td>
+                                                <input class="form-control" id="symbol1" type="text" onblur="populateStockInfo(1, document.getElementById(&quot;symbol1&quot;).value);">
+                                            </td>
+                                            <td>
+                                                <select class="combobox" id="country1">
+                                                    <option value=""></option>
+                                                    <option value="usa">USA</option>
+                                                    <option value="canada">Canada</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <select class="combobox" id="orderType1">
+                                                    <option value=""></option>
+                                                    <option value="day">Day</option>
+                                                    <option value="gtc">GTC</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <input class="form-control" id="limitPrice1" type="number" value="0" onchange="updateRowTotal(1);">
+                                            </td>
+                                            <td>
+                                                <input class="form-control" id="account1" type="text" onblur="testTextboxLeaveEvent(1);">
+                                            </td>
+                                            <td>
+                                                <input class="form-control" id="total1" type="text">
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                
+                                <table id="stocks_table" class="table table-striped table-bordered">
+                                </table>
+                                
+                                <button type="button" class="btn btn-default" onclick="addRow();">Add Row</button>
+                                <button type="button" class="btn btn-default" onclick="test(1);">|| Test ||</button>
                             </div>
                         </div>
                         <!--.tab-pane -->
@@ -195,6 +300,9 @@
                             <div class="panel-heading">
                                 <h3>Stocks</h3></div>
                             <div class="panel-body">
+                                <div class="embed-responsive embed-responsive-16by9">
+                                    <iframe id="stocks_frame" class="embed-responsive-item" src=""></iframe>
+                                </div>
                             </div>
                         </div>
                         <!--.tab-pane -->
@@ -207,8 +315,24 @@
                         <!--.tab-pane -->
                         <div class="tab-pane" id="portfolio">
                             <div class="panel-heading">
-                                <h3>Portfolio</h3></div>
+                                <h3>Portfolio</h3>
+                            </div>
                             <div class="panel-body">
+                                <div class="embed-responsive embed-responsive-16by9">
+                                    <iframe class="embed-responsive-item" src="portfolio_table.php"></iframe>
+                                </div>
+                                <div class="text-right">
+                                    <a href="upload_portfolio.php" class="btn btn-primary" data-toggle="modal" data-target="#myModal">Upload New Portfolio</a>
+
+                                    <!-- Modal HTML -->
+                                    <div id="myModal" class="modal fade">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <!-- Content will be loaded here from "remote.php" file -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <!--.tab-pane -->
@@ -219,8 +343,8 @@
         </div>
     </div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-
+    <script src="bootstrap/js/bootstrap.min.js"></script>
+    <script src="js/bootstrap-combobox.js"></script>
 </body>
 
 </html>

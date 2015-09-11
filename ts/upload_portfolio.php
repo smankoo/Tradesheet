@@ -4,53 +4,15 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
     <title>Upload page</title>
-    <style type="text/css">
-        body {
-            background: #E3F4FC;
-            font: normal 14px/30px Helvetica, Arial, sans-serif;
-            color: #2b2b2b;
-        }
-        
-        a {
-            color: #898989;
-            font-size: 14px;
-            font-weight: bold;
-            text-decoration: none;
-        }
-        
-        a:hover {
-            color: #CC0033;
-        }
-        
-        h1 {
-            font: bold 14px Helvetica, Arial, sans-serif;
-            color: #CC0033;
-        }
-        
-        h2 {
-            font: bold 14px Helvetica, Arial, sans-serif;
-            color: #898989;
-        }
-        
-        #container {
-            background: #CCC;
-            margin: 100px auto;
-            width: 945px;
-        }
-        
-        #form {
-            padding: 20px 150px;
-        }
-        
-        #form input {
-            margin-bottom: 20px;
-        }
-    </style>
+
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="bootstrap/css/bootstrap-theme.min.css">
+
 </head>
 
 <body>
-    <div id="container">
-        <div id="form">
+    <div class="starter-template">
+        <div class="container">
 
             <?php
 
@@ -75,34 +37,114 @@
                 $i = 0;
                 while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
 
+                    $i = $i + 1;
+                    
+                    // Skip first row, because it contains headers
+                    if ( $i == 1 ){
+                        continue;
+                    }
+                    
                     // inserting escape characters (cleansing input)
 
                     foreach ($data as &$value) {
                         $value = addslashes ($value);
                     }
+                    
+                    $rep_acc_no_raw = $data[0];
+                    $sec_desc =  $data[5];
+                    $ticker = $data[49];
+                    $isin = $data[50];
+                    $local_curr_code = $data[13];
+                    $share_par = str_replace(",","",$data[17]);
+                    $base_cost = str_replace(",","",$data[18]);
+                    $local_cost = str_replace(",","",$data[19]);
+                    $base_market_value = str_replace(",","",$data[24]);
+                    $base_net_income_rec = str_replace(",","",$data[22]);
+                    $report_run_date = $data[38];
 
-                    $import="INSERT into portfolio() values('')";
+                    // debugging hook
+                    //echo "rep_acc_no_raw " . $rep_acc_no_raw . " </br>";
+                    //echo "sec_desc " . $sec_desc . " </br>";
+                    //echo "ticker " .  $ticker  . " </br>";
+                    //echo "isin " .  $isin  . " </br>";
+                    //echo "local_curr_code " .  $local_curr_code  . " </br>";
+                    //echo "share_par " .  $share_par  . " </br>";
+                    //echo "base_cost " .  $base_cost  . " </br>";
+                    //echo "local_cost " .  $local_cost  . " </br>";
+                    //echo "base_market_value " . $base_market_value . " </br>";
+                    //echo "base_net_income_rec " . $base_net_income_rec . " </br>";
+                    //echo "report_run_date " .  $report_run_date  . " </br>";
+                    
+                    // removing the extra "0"
+                    $rep_acc_no = substr($rep_acc_no_raw,0,8) . substr($rep_acc_no_raw,-3) ;
+                    
+                    //echo "rep_acc_no " .  $rep_acc_no  . " </br>";
+                    
+                    $base_market_value_total = $base_market_value + $base_net_income_rec;
+                                        
+                    $report_run_date_formatted = date_format(date_create_from_format('n/j/Y',$report_run_date ),'Y-m-d');
 
-                    //$i = $i + 1;
-                    //echo $i . " about to run the following query\n";
-                    //echo $import . "\n";
+                    
+                    //echo "base_market_value_total " .  $base_market_value_total  . " </br>";
+                    
+                    // Build the SQL
+                    if ( $i == 2 ){
+                        $remove="delete from portfolio where reporting_acc = '" . $rep_acc_no . "'";
+                        mysql_query($remove) or die(mysql_error());
+                    }
+                    
+                    
+                    $import="INSERT into portfolio(reporting_acc,
+                            security_description,
+                            local_currency_code,
+                            shares_par,
+                            base_cost,
+                            local_cost,
+                            base_market_value,
+                            report_run_date,
+                            ticker,
+                            isin) values('" . $rep_acc_no . "',
+                                        '" . $sec_desc . "',
+                                        '" . $local_curr_code . "',
+                                        '" . $share_par . "',
+                                        '" . $base_cost . "',
+                                        '" . $local_cost . "',
+                                        '" . $base_market_value_total . "',
+                                        '" . $report_run_date_formatted . "',
+                                        '" . $ticker . "',
+                                        '" . $isin . "')";
+
+
+                    //echo $i . " about to run the following query </br>";
+                    //echo $import . "</br>";
 
                     mysql_query($import) or die(mysql_error());
+
                 }
 
                 fclose($handle);
 
-                print "Import done";
+                print "Import done<br/>";
+                print "<a href=\"index.php#portfolio\">OK. Take me back to the Tradesheet application</a><br/>";
+                
 
                 //view upload form
             } else {
+            ?>
+                <div class="container col-lg-6">
+                    <div class="text-left" style="padding:20px 0px 20px 0px;">
+                        Upload new csv by browsing to file and clicking on Upload<br/>
+                    </div>
+                    
+                    <form enctype='multipart/form-data' action="upload_portfolio.php" method='post'>
+                        <input size='50' type='file' name='filename'>
+                        <div class="text-right">
+                        <input type='submit' class="btn btn-primary" name='submit' value='Upload'>
+                        </div>
+                    </form>
+                </div>
 
-                print "Upload new csv by browsing to file and clicking on Upload<br />\n";
-                print "<form enctype='multipart/form-data' action=" . htmlspecialchars($_SERVER["PHP_SELF"]) . " method='post'>";
-                print "File name to import:<br />\n";
-                print "<input size='50' type='file' name='filename'><br />\n";
-                print "<input type='submit' name='submit' value='Upload'></form>";
-
+                <?php
             }
 
             ?>

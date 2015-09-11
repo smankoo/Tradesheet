@@ -1,1 +1,0 @@
-@Website : http://www.sanwebe.com/2012/06/ajax-file-upload-with-php-and-jquery

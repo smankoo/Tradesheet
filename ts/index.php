@@ -35,6 +35,7 @@
 
     <script type="text/javascript">
         var row_num = 1;
+
         function addRow() {
             row_num++;
             var table = document.getElementById("stocks_table");
@@ -49,19 +50,17 @@
             var cell8 = row.insertCell(7);
             var cell9 = row.insertCell(8);
             var cell10 = row.insertCell(9);
-            var cell11 = row.insertCell(10);
-            
+
             cell1.innerHTML = "<input class=\"form-control\" id=\"symbol" + row_num + "\" type=\"text\" onblur=\"populateStockInfo(" + row_num + ", document.getElementById(&quot;symbol" + row_num + "&quot;).value);\">";
             cell2.innerHTML = "<input class=\"form-control\" id=\"isinNumber" + row_num + "\" type=\"text\">";
             cell3.innerHTML = "<input class=\"form-control\" id=\"securityName" + row_num + "\" type=\"text\">";
             cell4.innerHTML = "<select class=\"combobox\" id=\"country" + row_num + "\"> <option value=\"\"></option> <option value=\"usa\">USA</option> <option value=\"canada\">Canada</option> </select>";
             cell5.innerHTML = "<select class=\"combobox\" id=\"side" + row_num + "\" onchange=\"updateMaxShares(" + row_num + ");\"> <option value=\"\"></option> <option value=\"buy\">Buy</option> <option value=\"sell\">Sell</option> </select> ";
             cell6.innerHTML = "<input class=\"form-control\" id=\"shares" + row_num + "\" type=\"number\" min=\"0\" onblur=\"validateShareCount(" + row_num + ");\" onchange=\"updateRowTotal(" + row_num + ");\">";
-            cell7.innerHTML = "<input class=\"form-control\" id=\"maxShares" + row_num + "\" value=\"\" disabled>";
+            cell7.innerHTML = "<input class=\"form-control\" id=\"maxShares" + row_num + "\" value=\"\" onchange=\"validateShareCount(" + row_num + ");\" disabled>";
             cell8.innerHTML = "<select class=\"combobox\" id=\"orderType" + row_num + "\"> <option value=\"\"></option> <option value=\"day\">Day</option> <option value=\"gtc\">GTC</option> </select>";
             cell9.innerHTML = "<input class=\"form-control\" id=\"limitPrice" + row_num + "\" type=\"number\" min=\"0\" value=\"0\" onchange=\"updateRowTotal(" + row_num + ");\">";
-            cell10.innerHTML = "<input class=\"form-control\" id=\"total" + row_num + "\" type=\"text\" disabled>";
-            cell11.innerHTML = "<input class=\"form-control\" id=\"account" + row_num + "\" type=\"text\" onblur=\"testTextboxLeaveEvent(" + row_num + ");\">";
+            cell10.innerHTML = "<input class=\"form-control\ text-right\" id=\"total" + row_num + "\" type=\"text\" disabled>";
 
         }
 
@@ -71,7 +70,8 @@
             var totalValue = sharesCell.value * limitpriceCell.value;
             var totalCell = document.getElementById('total' + rowid);
             totalCell.value = totalValue;
-         }
+            updateSheetTotal();
+        }
 
         function updateMaxShares(rowid) {
             var sideCell = document.getElementById("side" + rowid);
@@ -84,10 +84,10 @@
             } else {
                 maxSharesCell.value = "";
             }
-            //alert("Hello! I am an alert box!!");
+            updateSheetTotal();
         }
 
-        function populateStockInfo(rowid,str) {
+        function populateStockInfo(rowid, str) {
             if (str == "") {
                 document.getElementById("securityName" + rowid).value = "";
                 document.getElementById("isinNumber" + rowid).value = "";
@@ -104,26 +104,26 @@
                 xmlhttp.onreadystatechange = function () {
                     if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
                         var responseJson = JSON.parse(xmlhttp.responseText);
-                        
+
                         document.getElementById("securityName" + rowid).value = responseJson.description;
                         document.getElementById("securityName" + rowid).disabled = true;
                         document.getElementById("isinNumber" + rowid).value = responseJson.isin;
                         document.getElementById("isinNumber" + rowid).disabled = true;
-                        
+
                         document.getElementById("country" + rowid).value = responseJson.country.toLowerCase();
                         document.getElementById("country" + rowid).disabled = true;
-                        
-                        if (document.getElementById("side" + rowid).value == "sell" && ( document.getElementById("maxShares" + rowid).value == "" || document.getElementById("maxShares" + rowid).value == "0" ) ) {
+
+                        if (document.getElementById("side" + rowid).value == "sell" && (document.getElementById("maxShares" + rowid).value == "" || document.getElementById("maxShares" + rowid).value == "0")) {
                             populateMaxShares(rowid);
                         }
                     }
                 }
-               
+
                 xmlhttp.open("GET", "getSecurityInfo.php?sym=" + str, true);
                 xmlhttp.send();
             }
         }
-        
+
         function populateMaxShares(rowid) {
             var str = document.getElementById("isinNumber" + rowid).value;
             if (str == "") {
@@ -138,38 +138,86 @@
                     xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
                 }
                 xmlhttp.onreadystatechange = function () {
-                    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-                        var responseJson = JSON.parse(xmlhttp.responseText);
-                        document.getElementById("maxShares" + rowid).value = responseJson.shares_par;
-                        document.getElementById("shares" + rowid).max = responseJson.shares_par;
+                        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                            var responseJson = JSON.parse(xmlhttp.responseText);
+                            document.getElementById("maxShares" + rowid).value = responseJson.shares_par;
+                            document.getElementById("shares" + rowid).max = responseJson.shares_par;
+                        }
                     }
-                }
-                //alert("Sending : getSecurityInfo.php?sym=" + str);
+                    //alert("Sending : getSecurityInfo.php?sym=" + str);
                 xmlhttp.open("GET", "getPortInfo.php?isin=" + str, true);
                 xmlhttp.send();
             }
         }
-        
+
         function validateShareCount(rowid) {
-            var maxShares = parseInt(document.getElementById("maxShares" + rowid).value,10);
-            var shareCount = parseInt(document.getElementById("shares" + rowid).value,10);
-            if ( !shareCount ) {
+            var maxShares = parseFloat(document.getElementById("maxShares" + rowid).value, 10);
+            var shareCount = parseFloat(document.getElementById("shares" + rowid).value, 10);
+            if (!shareCount) {
                 return;
             }
-            if ( shareCount > maxShares ) {
+            if (shareCount > maxShares) {
                 alert("Number of shares is higher than the number of shares you own");
                 document.getElementById("shares" + rowid).focus();
                 document.getElementById("shares" + rowid).select();
             }
         }
-        
-        function test(rowid) {
-            alert("hello" + rowid);
-        }
 
+        function updateSheetTotal() {
+            var oInputs = new Array();
+            oInputs = document.getElementsByTagName( 'input' ) // store collection of all <input/> elements
+            var sheetTotalPurchaseCAD = 0
+            var sheetTotalPurchaseUSD = 0
+            var sheetTotalSaleCAD = 0
+            var sheetTotalSaleUSD = 0
+            var calc_row_num;
+            
+            for ( i = 0; i < oInputs.length; i++ )
+            { 
+                // loop through and find <input type="text"/>
+                if ( oInputs[i].type == 'text' && oInputs[i].id.substring(0,5) == 'total' )
+                {
+                    calc_row_num = oInputs[i].id.substring(5,6);
+                    
+                    if ( document.getElementById("side" + calc_row_num).value == "buy" ){
+                        if ( document.getElementById("country" + calc_row_num).value == "canada" ){
+                            sheetTotalPurchaseCAD += parseFloat(oInputs[i].value,10);
+                        } else if ( document.getElementById("country" + calc_row_num).value == "usa" ){
+                            sheetTotalPurchaseUSD += parseFloat(oInputs[i].value,10);
+                        }
+                    } else if ( document.getElementById("side" + calc_row_num).value == "sell" ){
+                        if ( document.getElementById("country" + calc_row_num).value == "canada" ){
+                            sheetTotalSaleCAD += parseFloat(oInputs[i].value,10);
+                        } else if ( document.getElementById("country" + calc_row_num).value == "usa" ){
+                            sheetTotalSaleUSD += parseFloat(oInputs[i].value,10);
+                        }
+                    }
+                }
+            }
+            document.getElementById("sheetPurchaseTotalCAD").value = sheetTotalPurchaseCAD;
+            document.getElementById("sheetPurchaseTotalUSD").value = sheetTotalPurchaseUSD;
+            document.getElementById("sheetSaleTotalCAD").value = sheetTotalSaleCAD;
+            document.getElementById("sheetSaleTotalUSD").value = sheetTotalSaleUSD;
+            
+            if ( sheetTotalPurchaseCAD > parseFloat(document.getElementById("cashAtHandCAD").value,"10") ){
+                document.getElementById("sheetPurchaseTotalCAD").style.backgroundColor = "red";
+                document.getElementById("sheetPurchaseTotalCAD").style.color = "white";
+            } else {
+                document.getElementById("sheetPurchaseTotalCAD").style.backgroundColor = "";
+                document.getElementById("sheetPurchaseTotalCAD").style.color = "";
+            }
+            if ( sheetTotalPurchaseUSD > parseFloat(document.getElementById("cashAtHandUSD").value,"10") ){
+                document.getElementById("sheetPurchaseTotalUSD").style.backgroundColor = "red";
+                document.getElementById("sheetPurchaseTotalUSD").style.color = "white";
+            } else {
+                document.getElementById("sheetPurchaseTotalUSD").style.backgroundColor = "";
+                document.getElementById("sheetPurchaseTotalUSD").style.color = "";
+            }
+            
+        }
     </script>
 
-    
+
     <?php
     include 'getCashAmount.php';
     ?>
@@ -178,13 +226,17 @@
         body {
             padding-top: 50px;
         }
-        
+
         .starter-template {
             padding: 40px 15px;
             text-align: center;
         }
+
+        total-cell {
+            width: 150px;
+        }
     </style>
-    
+
 
 
     <!--[if IE]>
@@ -230,8 +282,8 @@
                                 <h3>Tradesheet</h3></div>
                             <div class="panel-body">
                                 <p class="text-right">
-                                <button type="button" class="btn btn-default" onclick="addRow();">Add Row</button>
-                                <button type="button" class="btn btn-default" onclick="test(1);">|| Test ||</button>
+                                    <button type="button" class="btn btn-default" onclick="addRow();">Add Row</button>
+                                    <button type="button" class="btn btn-default" onclick="test(1);">|| Test ||</button>
                                 </p>
                                 <table id="stocks_table" class="table table-striped table-bordered">
                                     <thead>
@@ -260,7 +312,7 @@
                                                 <input class="form-control" id="securityName1" type="text">
                                             </td>
                                             <td style="vertical-align: text-bottom;">
-                                                <select id="country1">
+                                                <select id="country1" onchange="updateSheetTotal();">
                                                     <option value=""></option>
                                                     <option value="usa">USA</option>
                                                     <option value="canada">Canada</option>
@@ -277,7 +329,7 @@
                                                 <input class="form-control" id="shares1" type="number" min="0" onblur="validateShareCount(1);" onchange="updateRowTotal(1);">
                                             </td>
                                             <td>
-                                                <input class="form-control" id="maxShares1" value="" disabled>
+                                                <input class="form-control" id="maxShares1" value="" onchange="validateShareCount(1);" disabled>
                                             </td>
                                             <td>
                                                 <select id="orderType1">
@@ -290,52 +342,65 @@
                                                 <input class="form-control" id="limitPrice1" type="number" min="0" value="0" onchange="updateRowTotal(1);">
                                             </td>
                                             <td>
-                                                <input class="form-control" id="total1" type="text" disabled>
+                                                <input class="form-control text-right" id="total1" type="text" disabled>
                                             </td>
                                         </tr>
                                     </tbody>
                                 </table>
-                                
-                                <table id="purchase_table" class="table table-striped table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th>Purchase Table</th>
-                                            <th>Cash at Hand</th>
-                                            <th>Sheet Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>CAD</td>
-                                            <td><?php getCashOnHand("CAD"); ?></td>
-                                            <td></td>
-                                        </tr>
-                                        <tr>
-                                            <td>USD</td>
-                                            <td><?php getCashOnHand("USD"); ?></td>
-                                            <td></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                                
-                                <table id="sale_table" class="table table-striped table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th>Sale Table</th>
-                                            <th>Sheet Total</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>CAD</td>
-                                            <td></td>
-                                        </tr>
-                                        <tr>
-                                            <td>USD</td>
-                                            <td></td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                <div style="max-width: 450px; float: right;">
+                                    <table id="purchase_table" class="table table-striped table-bordered" style="width:300;">
+                                        <thead>
+                                            <tr>
+                                                <th>Purchase Table</th>
+                                                <th style="width:170px;">Cash at Hand</th>
+                                                <th style="width:150px;">Sheet Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>CAD</td>
+                                                <td>
+                                                    <input class="form-control text-right" id="cashAtHandCAD" type="text" value="<?php getCashOnHand("CAD"); ?>" disabled>
+                                                </td>
+                                                <td>
+                                                    <input class="form-control text-right" id="sheetPurchaseTotalCAD" type="text" value="0" disabled>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>USD</td>
+                                                <td>
+                                                    <input class="form-control text-right" id="cashAtHandUSD" type="text" value="<?php getCashOnHand("USD"); ?>" disabled>
+                                                </td>
+                                                <td>
+                                                    <input class="form-control text-right" id="sheetPurchaseTotalUSD" type="text" value="0" disabled>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+
+                                    <table id="sale_table" class="table table-striped table-bordered" style="width:300;">
+                                        <thead>
+                                            <tr>
+                                                <th>Sale Table</th>
+                                                <th style="width:150px;">Sheet Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>CAD</td>
+                                                <td>
+                                                    <input class="form-control text-right" id="sheetSaleTotalCAD" type="text" value="0" disabled>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>USD</td>
+                                                <td>
+                                                    <input class="form-control text-right" id="sheetSaleTotalUSD" type="text" value="0" disabled>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                         <!--.tab-pane -->

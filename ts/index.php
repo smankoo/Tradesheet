@@ -51,18 +51,17 @@
             var cell10 = row.insertCell(9);
             var cell11 = row.insertCell(10);
             
-            cell1.innerHTML = "<select class=\"combobox\" id=\"side" + row_num + "\" onchange=\"updateMaxShares(" + row_num + ");\"> <option value=\"\"></option> <option value=\"buy\">Buy</option> <option value=\"sell\">Sell</option> </select> ";
-            cell2.innerHTML = "<input class=\"form-control\" id=\"shares" + row_num + "\" type=\"number\" min=\"0\" onblur=\"validateShareCount(" + row_num + ");\" onchange=\"updateRowTotal(" + row_num + ");\">";
-
-            cell3.innerHTML = "<input class=\"form-control\" id=\"maxShares" + row_num + "\" value=\"\" disabled>";
-            cell4.innerHTML = "<input class=\"form-control\" id=\"isinNumber" + row_num + "\" type=\"text\">";
-            cell5.innerHTML = "<input class=\"form-control\" id=\"securityName" + row_num + "\" type=\"text\">";
-            cell6.innerHTML = "<input class=\"form-control\" id=\"symbol" + row_num + "\" type=\"text\" onblur=\"populateStockInfo(" + row_num + ", document.getElementById(&quot;symbol" + row_num + "&quot;).value);\">";
-            cell7.innerHTML = "<select class=\"combobox\" id=\"country" + row_num + "\"> <option value=\"\"></option> <option value=\"usa\">USA</option> <option value=\"canada\">Canada</option> </select>";
+            cell1.innerHTML = "<input class=\"form-control\" id=\"symbol" + row_num + "\" type=\"text\" onblur=\"populateStockInfo(" + row_num + ", document.getElementById(&quot;symbol" + row_num + "&quot;).value);\">";
+            cell2.innerHTML = "<input class=\"form-control\" id=\"isinNumber" + row_num + "\" type=\"text\">";
+            cell3.innerHTML = "<input class=\"form-control\" id=\"securityName" + row_num + "\" type=\"text\">";
+            cell4.innerHTML = "<select class=\"combobox\" id=\"country" + row_num + "\"> <option value=\"\"></option> <option value=\"usa\">USA</option> <option value=\"canada\">Canada</option> </select>";
+            cell5.innerHTML = "<select class=\"combobox\" id=\"side" + row_num + "\" onchange=\"updateMaxShares(" + row_num + ");\"> <option value=\"\"></option> <option value=\"buy\">Buy</option> <option value=\"sell\">Sell</option> </select> ";
+            cell6.innerHTML = "<input class=\"form-control\" id=\"shares" + row_num + "\" type=\"number\" min=\"0\" onblur=\"validateShareCount(" + row_num + ");\" onchange=\"updateRowTotal(" + row_num + ");\">";
+            cell7.innerHTML = "<input class=\"form-control\" id=\"maxShares" + row_num + "\" value=\"\" disabled>";
             cell8.innerHTML = "<select class=\"combobox\" id=\"orderType" + row_num + "\"> <option value=\"\"></option> <option value=\"day\">Day</option> <option value=\"gtc\">GTC</option> </select>";
-            cell9.innerHTML = "<input class=\"form-control\" id=\"limitPrice" + row_num + "\" type=\"number\" value=\"0\" onchange=\"updateRowTotal(" + row_num + ");\">";
-            cell10.innerHTML = "<input class=\"form-control\" id=\"account" + row_num + "\" type=\"text\" onblur=\"testTextboxLeaveEvent(" + row_num + ");\">";
-            cell11.innerHTML = "<input class=\"form-control\" id=\"total" + row_num + "\" type=\"text\">";
+            cell9.innerHTML = "<input class=\"form-control\" id=\"limitPrice" + row_num + "\" type=\"number\" min=\"0\" value=\"0\" onchange=\"updateRowTotal(" + row_num + ");\">";
+            cell10.innerHTML = "<input class=\"form-control\" id=\"total" + row_num + "\" type=\"text\" disabled>";
+            cell11.innerHTML = "<input class=\"form-control\" id=\"account" + row_num + "\" type=\"text\" onblur=\"testTextboxLeaveEvent(" + row_num + ");\">";
 
         }
 
@@ -107,9 +106,12 @@
                         var responseJson = JSON.parse(xmlhttp.responseText);
                         
                         document.getElementById("securityName" + rowid).value = responseJson.description;
+                        document.getElementById("securityName" + rowid).disabled = true;
                         document.getElementById("isinNumber" + rowid).value = responseJson.isin;
-                        document.getElementById("country" + rowid).value = responseJson.country.toLowerCase();
+                        document.getElementById("isinNumber" + rowid).disabled = true;
                         
+                        document.getElementById("country" + rowid).value = responseJson.country.toLowerCase();
+                        document.getElementById("country" + rowid).disabled = true;
                         
                         if (document.getElementById("side" + rowid).value == "sell" && ( document.getElementById("maxShares" + rowid).value == "" || document.getElementById("maxShares" + rowid).value == "0" ) ) {
                             populateMaxShares(rowid);
@@ -167,6 +169,10 @@
 
     </script>
 
+    
+    <?php
+    include 'getCashAmount.php';
+    ?>
 
     <style>
         body {
@@ -178,6 +184,8 @@
             text-align: center;
         }
     </style>
+    
+
 
     <!--[if IE]>
         <script src="https://cdn.jsdelivr.net/html5shiv/3.7.2/html5shiv.min.js"></script>
@@ -187,7 +195,7 @@
 
 <body>
     <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-        <div class="container">
+        <div class="container col-lg-12">
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
                     <span class="sr-only">Toggle navigation</span>
@@ -210,7 +218,7 @@
         </div>
     </nav>
 
-    <div class="container">
+    <div class="container col-lg-12">
         <div class="starter-template">
             <div class="">
                 <div class="panel panel-default">
@@ -228,23 +236,38 @@
                                 <table id="stocks_table" class="table table-striped table-bordered">
                                     <thead>
                                         <tr>
-                                            <th>SIDE</th>
-                                            <th>SHARES</th>
-                                            <th>Max Shares</th>
-                                            <th>ISIN Number</th>
+                                            <th style="width:120px;">SYMBOL</th>
+                                            <th style="width:150px;">ISIN Number</th>
                                             <th>NAME</th>
-                                            <th>SYMBOL</th>
-                                            <th>COUNTRY</th>
-                                            <th>ORDER TYPE</th>
-                                            <th>LIMITPRICE</th>
-                                            <th>ACCOUNT</th>
-                                            <th>TOTAL</th>
+                                            <th style="width:60px;">COUNTRY</th>
+                                            <th style="width:60px;">SIDE</th>
+                                            <th style="width:100px;">SHARES</th>
+                                            <th style="width:100px;">Max Shares</th>
+                                            <th style="width:110px;">ORDER TYPE</th>
+                                            <th style="width:100px;">LIMITPRICE</th>
+                                            <th style="width:150px;">TOTAL</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <tr>
                                             <td>
-                                                <select class="combobox" id="side1" onchange="updateMaxShares(1);">
+                                                <input class="form-control" id="symbol1" type="text" onblur="populateStockInfo(1, document.getElementById(&quot;symbol1&quot;).value);">
+                                            </td>
+                                            <td>
+                                                <input class="form-control" id="isinNumber1" type="text">
+                                            </td>
+                                            <td>
+                                                <input class="form-control" id="securityName1" type="text">
+                                            </td>
+                                            <td style="vertical-align: text-bottom;">
+                                                <select id="country1">
+                                                    <option value=""></option>
+                                                    <option value="usa">USA</option>
+                                                    <option value="canada">Canada</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <select id="side1" onchange="updateMaxShares(1);">
                                                     <option value=""></option>
                                                     <option value="buy">Buy</option>
                                                     <option value="sell">Sell</option>
@@ -257,36 +280,17 @@
                                                 <input class="form-control" id="maxShares1" value="" disabled>
                                             </td>
                                             <td>
-                                                <input class="form-control" id="isinNumber1" type="text">
-                                            </td>
-                                            <td>
-                                                <input class="form-control" id="securityName1" type="text">
-                                            </td>
-                                            <td>
-                                                <input class="form-control" id="symbol1" type="text" onblur="populateStockInfo(1, document.getElementById(&quot;symbol1&quot;).value);">
-                                            </td>
-                                            <td>
-                                                <select class="combobox" id="country1">
-                                                    <option value=""></option>
-                                                    <option value="usa">USA</option>
-                                                    <option value="canada">Canada</option>
-                                                </select>
-                                            </td>
-                                            <td>
-                                                <select class="combobox" id="orderType1">
+                                                <select id="orderType1">
                                                     <option value=""></option>
                                                     <option value="day">Day</option>
                                                     <option value="gtc">GTC</option>
                                                 </select>
                                             </td>
                                             <td>
-                                                <input class="form-control" id="limitPrice1" type="number" value="0" onchange="updateRowTotal(1);">
+                                                <input class="form-control" id="limitPrice1" type="number" min="0" value="0" onchange="updateRowTotal(1);">
                                             </td>
                                             <td>
-                                                <input class="form-control" id="account1" type="text" onblur="testTextboxLeaveEvent(1);">
-                                            </td>
-                                            <td>
-                                                <input class="form-control" id="total1" type="text">
+                                                <input class="form-control" id="total1" type="text" disabled>
                                             </td>
                                         </tr>
                                     </tbody>
@@ -303,12 +307,12 @@
                                     <tbody>
                                         <tr>
                                             <td>CAD</td>
-                                            <td></td>
+                                            <td><?php getCashOnHand("CAD"); ?></td>
                                             <td></td>
                                         </tr>
                                         <tr>
                                             <td>USD</td>
-                                            <td></td>
+                                            <td><?php getCashOnHand("USD"); ?></td>
                                             <td></td>
                                         </tr>
                                     </tbody>

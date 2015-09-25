@@ -26,6 +26,9 @@ while($row = mysql_fetch_assoc($result)) {
     print json_encode($row);
 }
 
+if ( mysql_num_rows($result) == 0 ) {
+    print "NOTFOUND";
+}
 
 // Free the resources associated with the result set
 // This is done automatically at the end of the script

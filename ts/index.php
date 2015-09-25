@@ -34,12 +34,12 @@
     </script>
 
     <script type="text/javascript">
-        var row_num = 1;
-
         function addRow() {
-            row_num++;
-            var table = document.getElementById("stocks_table");
-            var row = table.insertRow(document.getElementById("stocks_table").rows.length);
+            var table = document.getElementById("stocks_table_tbody");
+
+            row_num = table.rows.length + 1;
+            var row = table.insertRow(table.rows.length);
+
             var cell1 = row.insertCell(0);
             var cell2 = row.insertCell(1);
             var cell3 = row.insertCell(2);
@@ -50,17 +50,19 @@
             var cell8 = row.insertCell(7);
             var cell9 = row.insertCell(8);
             var cell10 = row.insertCell(9);
+            var cell11 = row.insertCell(10);
 
-            cell1.innerHTML = "<input class=\"form-control\" id=\"symbol" + row_num + "\" type=\"text\" onblur=\"populateStockInfo(" + row_num + ", document.getElementById(&quot;symbol" + row_num + "&quot;).value);\">";
+            cell1.innerHTML = "<input class=\"form-control\" id=\"symbol" + row_num + "\" type=\"text\" onkeyup=\"javascript:capitalize(this.id, this.value);\" onblur=\"getStockInfoYahoo(" + row_num + ");\">";
             cell2.innerHTML = "<input class=\"form-control\" id=\"isinNumber" + row_num + "\" type=\"text\">";
             cell3.innerHTML = "<input class=\"form-control\" id=\"securityName" + row_num + "\" type=\"text\">";
             cell4.innerHTML = "<select class=\"combobox\" id=\"country" + row_num + "\"> <option value=\"\"></option> <option value=\"usa\">USA</option> <option value=\"canada\">Canada</option> </select>";
             cell5.innerHTML = "<select class=\"combobox\" id=\"side" + row_num + "\" onchange=\"updateMaxShares(" + row_num + ");\"> <option value=\"\"></option> <option value=\"buy\">Buy</option> <option value=\"sell\">Sell</option> </select> ";
-            cell6.innerHTML = "<input class=\"form-control\" id=\"shares" + row_num + "\" type=\"number\" min=\"0\" onblur=\"validateShareCount(" + row_num + ");\" onchange=\"updateRowTotal(" + row_num + ");\">";
-            cell7.innerHTML = "<input class=\"form-control\" id=\"maxShares" + row_num + "\" value=\"\" onchange=\"validateShareCount(" + row_num + ");\" disabled>";
-            cell8.innerHTML = "<select class=\"combobox\" id=\"orderType" + row_num + "\"> <option value=\"\"></option> <option value=\"day\">Day</option> <option value=\"gtc\">GTC</option> </select>";
-            cell9.innerHTML = "<input class=\"form-control\" id=\"limitPrice" + row_num + "\" type=\"number\" min=\"0\" value=\"0\" onchange=\"updateRowTotal(" + row_num + ");\">";
-            cell10.innerHTML = "<input class=\"form-control\ text-right\" id=\"total" + row_num + "\" type=\"text\" disabled>";
+            cell6.innerHTML = "<input class=\"form-control\" id=\"shares" + row_num + "\" type=\"number\" value=\"0\" min=\"0\" onblur=\"validateShareCount(" + row_num + ");\" onchange=\"updateRowTotal(" + row_num + ");\" disabled>";
+            cell7.innerHTML = "<input class=\"form-control\" id=\"maxShares" + row_num + "\" value=\"0\" onchange=\"validateShareCount(" + row_num + ");\" disabled>";
+            cell8.innerHTML = "<select class=\"combobox\" id=\"orderType" + row_num + "\">  <option value=\"gtc\">GTC</option> <option value=\"day\">Day</option></select>";
+            cell9.innerHTML = "<td><select id=\"mkt_or_limit1\" onchange=\"mktLimitChanged(" + row_num + ");\"><option value=\"mkt\">MKT</option><option value=\"limit\">Limit</option></select></td>";
+            cell10.innerHTML = "<input class=\"form-control\" id=\"limitPrice" + row_num + "\" type=\"number\" min=\"0\" value=\"0\" onchange=\"updateRowTotal(" + row_num + ");\" disabled>";
+            cell11.innerHTML = "<input class=\"form-control text-right\" id=\"total" + row_num + "\" type=\"number\" value=\"0\" disabled>";
 
         }
 
@@ -79,19 +81,24 @@
 
             if (sideCell.value == "buy") {
                 maxSharesCell.value = "N/A";
+                document.getElementById("shares" + rowid).max = "";
+                document.getElementById("shares" + rowid).disabled = false;
             } else if (sideCell.value == "sell") {
+                document.getElementById("shares" + rowid).value = "0";
+                document.getElementById("shares" + rowid).disabled = false;
                 populateMaxShares(rowid);
             } else {
+                document.getElementById("shares" + rowid).disabled = true;
                 maxSharesCell.value = "";
             }
             updateSheetTotal();
         }
 
-        function populateStockInfo(rowid, str) {
+        function populateStockInfoFromDB(rowid) {
+            var str = document.getElementById("symbol" + rowid).value;
+
             if (str == "") {
-                document.getElementById("securityName" + rowid).value = "";
                 document.getElementById("isinNumber" + rowid).value = "";
-                document.getElementById("country" + rowid).value = "";
                 return;
             } else {
                 if (window.XMLHttpRequest) {
@@ -103,22 +110,34 @@
                 }
                 xmlhttp.onreadystatechange = function () {
                     if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-                        var responseJson = JSON.parse(xmlhttp.responseText);
 
-                        document.getElementById("securityName" + rowid).value = responseJson.description;
-                        document.getElementById("securityName" + rowid).disabled = true;
-                        document.getElementById("isinNumber" + rowid).value = responseJson.isin;
-                        document.getElementById("isinNumber" + rowid).disabled = true;
+                        if (xmlhttp.responseText != "NOTFOUND") {
 
-                        document.getElementById("country" + rowid).value = responseJson.country.toLowerCase();
-                        document.getElementById("country" + rowid).disabled = true;
+                            var responseJson = JSON.parse(xmlhttp.responseText);
 
-                        if (document.getElementById("side" + rowid).value == "sell" && (document.getElementById("maxShares" + rowid).value == "" || document.getElementById("maxShares" + rowid).value == "0")) {
-                            populateMaxShares(rowid);
+                            //document.getElementById("securityName" + rowid).value = responseJson.description;
+                            //document.getElementById("securityName" + rowid).disabled = true;
+                            document.getElementById("isinNumber" + rowid).value = responseJson.isin;
+                            document.getElementById("isinNumber" + rowid).disabled = true;
+
+                            //document.getElementById("country" + rowid).value = responseJson.country.toLowerCase();
+                            //document.getElementById("country" + rowid).disabled = true;
+
+                            if (document.getElementById("side" + rowid).value == "sell" && (document.getElementById("maxShares" + rowid).value == "" || document.getElementById("maxShares" + rowid).value == "0")) {
+                                populateMaxShares(rowid);
+                            }
+
+                        } else {
+                            document.getElementById("isinNumber" + rowid).value = "";
+                            document.getElementById("isinNumber" + rowid).disabled = false;
+
+                            document.getElementById("maxShares" + rowid).value = "0";
+                            document.getElementById("shares" + rowid).max = "0";
                         }
-                    }
-                }
 
+                    }
+                };
+                //alert("getSecurityInfo.php?sym=" + str);
                 xmlhttp.open("GET", "getSecurityInfo.php?sym=" + str, true);
                 xmlhttp.send();
             }
@@ -138,13 +157,18 @@
                     xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
                 }
                 xmlhttp.onreadystatechange = function () {
-                        if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                        if (xmlhttp.responseText != "NOTFOUND") {
                             var responseJson = JSON.parse(xmlhttp.responseText);
                             document.getElementById("maxShares" + rowid).value = responseJson.shares_par;
                             document.getElementById("shares" + rowid).max = responseJson.shares_par;
+                        } else {
+                            document.getElementById("maxShares" + rowid).value = "0";
+                            document.getElementById("shares" + rowid).max = "0";
                         }
                     }
-                    //alert("Sending : getSecurityInfo.php?sym=" + str);
+                };
+                //alert("Sending : getSecurityInfo.php?sym=" + str);
                 xmlhttp.open("GET", "getPortInfo.php?isin=" + str, true);
                 xmlhttp.send();
             }
@@ -165,31 +189,29 @@
 
         function updateSheetTotal() {
             var oInputs = new Array();
-            oInputs = document.getElementsByTagName( 'input' ) // store collection of all <input/> elements
-            var sheetTotalPurchaseCAD = 0
-            var sheetTotalPurchaseUSD = 0
-            var sheetTotalSaleCAD = 0
-            var sheetTotalSaleUSD = 0
+            oInputs = document.getElementsByTagName('input'); // store collection of all <input/> elements
+            var sheetTotalPurchaseCAD = 0;
+            var sheetTotalPurchaseUSD = 0;
+            var sheetTotalSaleCAD = 0;
+            var sheetTotalSaleUSD = 0;
             var calc_row_num;
-            
-            for ( i = 0; i < oInputs.length; i++ )
-            { 
+
+            for (i = 0; i < oInputs.length; i++) {
                 // loop through and find <input type="text"/>
-                if ( oInputs[i].type == 'text' && oInputs[i].id.substring(0,5) == 'total' )
-                {
-                    calc_row_num = oInputs[i].id.substring(5,6);
-                    
-                    if ( document.getElementById("side" + calc_row_num).value == "buy" ){
-                        if ( document.getElementById("country" + calc_row_num).value == "canada" ){
-                            sheetTotalPurchaseCAD += parseFloat(oInputs[i].value,10);
-                        } else if ( document.getElementById("country" + calc_row_num).value == "usa" ){
-                            sheetTotalPurchaseUSD += parseFloat(oInputs[i].value,10);
+                if (oInputs[i].type == 'number' && oInputs[i].id.substring(0, 5) == 'total') {
+                    calc_row_num = oInputs[i].id.substring(5, 6);
+
+                    if (document.getElementById("side" + calc_row_num).value == "buy") {
+                        if (document.getElementById("country" + calc_row_num).value == "canada") {
+                            sheetTotalPurchaseCAD += parseFloat(oInputs[i].value, 10);
+                        } else if (document.getElementById("country" + calc_row_num).value == "usa") {
+                            sheetTotalPurchaseUSD += parseFloat(oInputs[i].value, 10);
                         }
-                    } else if ( document.getElementById("side" + calc_row_num).value == "sell" ){
-                        if ( document.getElementById("country" + calc_row_num).value == "canada" ){
-                            sheetTotalSaleCAD += parseFloat(oInputs[i].value,10);
-                        } else if ( document.getElementById("country" + calc_row_num).value == "usa" ){
-                            sheetTotalSaleUSD += parseFloat(oInputs[i].value,10);
+                    } else if (document.getElementById("side" + calc_row_num).value == "sell") {
+                        if (document.getElementById("country" + calc_row_num).value == "canada") {
+                            sheetTotalSaleCAD += parseFloat(oInputs[i].value, 10);
+                        } else if (document.getElementById("country" + calc_row_num).value == "usa") {
+                            sheetTotalSaleUSD += parseFloat(oInputs[i].value, 10);
                         }
                     }
                 }
@@ -198,22 +220,240 @@
             document.getElementById("sheetPurchaseTotalUSD").value = sheetTotalPurchaseUSD;
             document.getElementById("sheetSaleTotalCAD").value = sheetTotalSaleCAD;
             document.getElementById("sheetSaleTotalUSD").value = sheetTotalSaleUSD;
-            
-            if ( sheetTotalPurchaseCAD > parseFloat(document.getElementById("cashAtHandCAD").value,"10") ){
+
+            if (sheetTotalPurchaseCAD > parseFloat(document.getElementById("cashAtHandCAD").value, "10")) {
                 document.getElementById("sheetPurchaseTotalCAD").style.backgroundColor = "red";
                 document.getElementById("sheetPurchaseTotalCAD").style.color = "white";
             } else {
                 document.getElementById("sheetPurchaseTotalCAD").style.backgroundColor = "";
                 document.getElementById("sheetPurchaseTotalCAD").style.color = "";
             }
-            if ( sheetTotalPurchaseUSD > parseFloat(document.getElementById("cashAtHandUSD").value,"10") ){
+            if (sheetTotalPurchaseUSD > parseFloat(document.getElementById("cashAtHandUSD").value, "10")) {
                 document.getElementById("sheetPurchaseTotalUSD").style.backgroundColor = "red";
                 document.getElementById("sheetPurchaseTotalUSD").style.color = "white";
             } else {
                 document.getElementById("sheetPurchaseTotalUSD").style.backgroundColor = "";
                 document.getElementById("sheetPurchaseTotalUSD").style.color = "";
             }
+
+        }
+
+        function clearPrepTableBody() {
+            var tbody = document.getElementById("preparedTableTbody");
+            tbody.innerHTML = "";
+        }
+
+        function prepTableHead() {
+
+            clearPrepTableBody();
+
+            var table = document.getElementById("preparedTable");
+
+            var header = table.createTHead();
+            var row = header.insertRow(0);
+            var cell1 = row.insertCell(0);
+            var cell2 = row.insertCell(1);
+            var cell3 = row.insertCell(2);
+            var cell4 = row.insertCell(3);
+            var cell5 = row.insertCell(4);
+            var cell6 = row.insertCell(5);
+            var cell7 = row.insertCell(6);
+            var cell8 = row.insertCell(7);
+            var cell9 = row.insertCell(8);
+            var cell10 = row.insertCell(9);
+            var cell11 = row.insertCell(10);
+
+            cell1.style = "width: 120px;";
+            cell2.style = "width: 150px;";
+            cell3.style = "";
+            cell4.style = "width: 60px;";
+            cell5.style = "width: 100px;";
+            cell6.style = "width: 100px;";
+            cell7.style = "width: 110px;";
+            cell8.style = "width: 110px;";
+            cell9.style = "width: 100px;";
+            cell10.style = "width: 150px;";
+            cell11.style = "width: 150px;";
+
+            cell1.innerHTML = "SYMBOL";
+            cell2.innerHTML = "ISIN Number";
+            cell3.innerHTML = "NAME";
+            cell4.innerHTML = "COUNTRY";
+            cell5.innerHTML = "SIDE";
+            cell6.innerHTML = "SHARES";
+            cell7.innerHTML = "ORDER TYPE";
+            cell8.innerHTML = "MKT/LIMIT";
+            cell9.innerHTML = "LIMITPRICE";
+            cell10.innerHTML = "TOTAL";
+            cell11.innerHTML = "ACCOUNT";
+
+        }
+
+        function prepareSheet() {
+
+            clearPrepTableBody();
+            var prep_row_num = 0;
+            var row_count = document.getElementById("stocks_table").rows.length - 1;
+
+            while (prep_row_num < row_count) {
+                prep_row_num++;
+                if (document.getElementById("total" + prep_row_num).value != 0) {
+                    var table = document.getElementById("preparedTableTbody");
+                    var row = table.insertRow(table.rows.length);
+                    var cell1 = row.insertCell(0);
+                    var cell2 = row.insertCell(1);
+                    var cell3 = row.insertCell(2);
+                    var cell4 = row.insertCell(3);
+                    var cell5 = row.insertCell(4);
+                    var cell6 = row.insertCell(5);
+                    var cell7 = row.insertCell(6);
+                    var cell8 = row.insertCell(7);
+                    var cell9 = row.insertCell(8);
+                    var cell10 = row.insertCell(9);
+
+                    cell1.innerHTML = document.getElementById("symbol" + prep_row_num).value;
+                    cell2.innerHTML = document.getElementById("isinNumber" + prep_row_num).value;
+                    cell3.innerHTML = document.getElementById("securityName" + prep_row_num).value;
+
+                    var e = document.getElementById("country" + prep_row_num);
+                    var strE = e.options[e.selectedIndex].text;
+
+                    cell4.innerHTML = strE;
+
+                    e = document.getElementById("side" + prep_row_num);
+                    strE = e.options[e.selectedIndex].text;
+
+                    cell5.innerHTML = strE;
+                    cell6.innerHTML = document.getElementById("shares" + prep_row_num).value;
+
+                    e = document.getElementById("orderType" + prep_row_num);
+                    strE = e.options[e.selectedIndex].text;
+
+                    cell7.innerHTML = strE;
+                    cell8.innerHTML = document.getElementById("limitPrice" + prep_row_num).value;
+                    cell9.innerHTML = document.getElementById("total" + prep_row_num).value;
+                    cell10.innerHTML = "Account#";
+                }
+
+            }
+
+            document.getElementById("preparedSheetDiv").style.display = 'block';
+        }
+
+        function toggleCurrencyConv() {
+            if (document.getElementById("currencyConvDiv").style.display == 'none') {
+                document.getElementById("currencyConvDiv").style.display = 'block';
+                getExchangeRate();
+            } else {
+                document.getElementById("currencyConvDiv").style.display = 'none';
+            }
+        }
+
+        function startOver() {
+            document.getElementById("preparedSheetDiv").style.display = 'none';
+            document.getElementById("stocks_table_tbody").innerHTML = "";
+            addRow();
+
+        }
+
+        function capitalize(textboxid, str) {
+            var str = str.toUpperCase();
+            document.getElementById(textboxid).value = str;
+        }
+
+        function getStockInfoYahoo(rowid) {
+            var str = document.getElementById("symbol" + rowid).value;
+
+            // Check for blankness
+            if (str == "") {
+                document.getElementById("limitPrice" + rowid).value = "";
+                return;
+            } else {
+
+                // Convert to Yahoo String
+                var stockName = str.substr(0, str.indexOf(" "));
+                var stockCountry = str.substr(str.indexOf(" ") + 1);
+                var yahooStr = stockName;
+                if (stockCountry == "US") {
+                    document.getElementById("country" + rowid).value = "usa";
+                    document.getElementById("country" + rowid).disabled = true;
+                } else if (stockCountry == "CN") {
+                    document.getElementById("country" + rowid).value = "canada";
+                    document.getElementById("country" + rowid).disabled = true;
+                    var yahooStr = yahooStr + ".TO";
+                } else {
+                    document.getElementById("country" + rowid).disabled = false;
+                }
+
+                if (window.XMLHttpRequest) {
+                    // code for IE7+, Firefox, Chrome, Opera, Safari
+                    xmlhttp = new XMLHttpRequest();
+                } else {
+                    // code for IE6, IE5
+                    xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+                }
+                xmlhttp.onreadystatechange = function () {
+                    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                        var responseJson = JSON.parse(xmlhttp.responseText);
+                        //alert(xmlhttp.responseText);
+                        stockPrice = responseJson.query.results.quote.LastTradePriceOnly;
+                        document.getElementById("limitPrice" + rowid).value = stockPrice;
+                        document.getElementById("limitPrice" + rowid).disabled = true;
+
+                        document.getElementById("securityName" + rowid).value = responseJson.query.results.quote.Name;
+                        document.getElementById("securityName" + rowid).disabled = true;
+
+                        if (document.getElementById("side" + rowid).value == "sell" && (document.getElementById("maxShares" + rowid).value == "" || document.getElementById("maxShares" + rowid).value == "0")) {
+                            populateMaxShares(rowid);
+                        }
+
+                        updateRowTotal(rowid);
+
+                        //Get the ISIN Number from DB
+                        populateStockInfoFromDB(rowid);
+                    }
+                };
+
+                //alert("Sending : getSecurityInfo.php?sym=" + str);
+                xmlhttp.open("GET", "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.quotes%20where%20symbol%20%3D%20%22" + yahooStr + "%22&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=", true);
+                xmlhttp.send();
+            }
+        }
+
+        function mktLimitChanged(rowid) {
+            var mkt_or_limit = document.getElementById("mkt_or_limit" + rowid).value;
+            if (mkt_or_limit == "mkt") {
+                getStockInfoYahoo(rowid);
+            } else {
+                document.getElementById("limitPrice" + rowid).value = "0";
+                document.getElementById("limitPrice" + rowid).disabled = false;
+                updateRowTotal(rowid);
+            }
+        }
+        
+        function getExchangeRate(){
+
+            if (window.XMLHttpRequest) {
+                // code for IE7+, Firefox, Chrome, Opera, Safari
+                xmlhttp = new XMLHttpRequest();
+            } else {
+                // code for IE6, IE5
+                xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+            }
+            xmlhttp.onreadystatechange = function () {
+                if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                    var responseJson = JSON.parse(xmlhttp.responseText);
+                    var exchangeRate = responseJson.query.results.rate.Rate;
+                    document.getElementById("exchangeRate").value = exchangeRate;
+                }
+            };
+            xmlhttp.open("GET", "https://query.yahooapis.com/v1/public/yql?q=select%20Rate%20from%20yahoo.finance.xchange%20where%20pair%20in%20(%22USDCAD%22)%3B&format=json&diagnostics=false&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=", true);
+            xmlhttp.send();
+        }
+        function updateToCurrValue(){
             
+        }
+        function updateFromCurrValue(){
         }
     </script>
 
@@ -222,24 +462,18 @@
     include 'getCashAmount.php';
     ?>
 
-    <style>
-        body {
-            padding-top: 50px;
-        }
+        <style>
+            body {
+                padding-top: 50px;
+            }
+            
+            .starter-template {
+                padding: 40px 15px;
+                text-align: center;
+            }
+        </style>
 
-        .starter-template {
-            padding: 40px 15px;
-            text-align: center;
-        }
-
-        total-cell {
-            width: 150px;
-        }
-    </style>
-
-
-
-    <!--[if IE]>
+        <!--[if IE]>
         <script src="https://cdn.jsdelivr.net/html5shiv/3.7.2/html5shiv.min.js"></script>
         <script src="https://cdn.jsdelivr.net/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
@@ -283,7 +517,7 @@
                             <div class="panel-body">
                                 <p class="text-right">
                                     <button type="button" class="btn btn-default" onclick="addRow();">Add Row</button>
-                                    <button type="button" class="btn btn-default" onclick="test(1);">|| Test ||</button>
+                                    <button type="button" class="btn btn-default" onclick="prepTableHead();">|| Test ||</button>
                                 </p>
                                 <table id="stocks_table" class="table table-striped table-bordered">
                                     <thead>
@@ -296,14 +530,15 @@
                                             <th style="width:100px;">SHARES</th>
                                             <th style="width:100px;">Max Shares</th>
                                             <th style="width:110px;">ORDER TYPE</th>
-                                            <th style="width:100px;">LIMITPRICE</th>
+                                            <th style="width:110px;">MKT/LIMIT</th>
+                                            <th style="width:150px;">LIMITPRICE</th>
                                             <th style="width:150px;">TOTAL</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody id="stocks_table_tbody">
                                         <tr>
                                             <td>
-                                                <input class="form-control" id="symbol1" type="text" onblur="populateStockInfo(1, document.getElementById(&quot;symbol1&quot;).value);">
+                                                <input class="form-control" id="symbol1" type="text" onkeyup="javascript:capitalize(this.id, this.value);" onblur="getStockInfoYahoo(1);">
                                             </td>
                                             <td>
                                                 <input class="form-control" id="isinNumber1" type="text">
@@ -326,28 +561,33 @@
                                                 </select>
                                             </td>
                                             <td>
-                                                <input class="form-control" id="shares1" type="number" min="0" onblur="validateShareCount(1);" onchange="updateRowTotal(1);">
+                                                <input class="form-control" id="shares1" type="number" value="0" min="0" onblur="validateShareCount(1);" onchange="updateRowTotal(1);" disabled>
                                             </td>
                                             <td>
-                                                <input class="form-control" id="maxShares1" value="" onchange="validateShareCount(1);" disabled>
+                                                <input class="form-control" id="maxShares1" value="0" onchange="validateShareCount(1);" disabled>
                                             </td>
                                             <td>
                                                 <select id="orderType1">
-                                                    <option value=""></option>
-                                                    <option value="day">Day</option>
                                                     <option value="gtc">GTC</option>
+                                                    <option value="day">Day</option>
                                                 </select>
                                             </td>
                                             <td>
-                                                <input class="form-control" id="limitPrice1" type="number" min="0" value="0" onchange="updateRowTotal(1);">
+                                                <select id="mkt_or_limit1" onchange="mktLimitChanged(1);">
+                                                    <option value="mkt">MKT</option>
+                                                    <option value="limit">Limit</option>
+                                                </select>
                                             </td>
                                             <td>
-                                                <input class="form-control text-right" id="total1" type="text" disabled>
+                                                <input class="form-control" id="limitPrice1" type="number" min="0" value="0" onchange="updateRowTotal(1);" disabled>
+                                            </td>
+                                            <td>
+                                                <input class="form-control text-right" id="total1" type="number" value="0" disabled>
                                             </td>
                                         </tr>
                                     </tbody>
                                 </table>
-                                <div style="max-width: 450px; float: right;">
+                                <div style="max-width: 450px; margin: auto;">
                                     <table id="purchase_table" class="table table-striped table-bordered" style="width:300;">
                                         <thead>
                                             <tr>
@@ -360,7 +600,7 @@
                                             <tr>
                                                 <td>CAD</td>
                                                 <td>
-                                                    <input class="form-control text-right" id="cashAtHandCAD" type="text" value="<?php getCashOnHand("CAD"); ?>" disabled>
+                                                    <input class="form-control text-right" id="cashAtHandCAD" type="text" value='<?php getCashOnHand("CAD"); ?>' disabled>
                                                 </td>
                                                 <td>
                                                     <input class="form-control text-right" id="sheetPurchaseTotalCAD" type="text" value="0" disabled>
@@ -369,7 +609,7 @@
                                             <tr>
                                                 <td>USD</td>
                                                 <td>
-                                                    <input class="form-control text-right" id="cashAtHandUSD" type="text" value="<?php getCashOnHand("USD"); ?>" disabled>
+                                                    <input class="form-control text-right" id="cashAtHandUSD" type="text" value='<?php getCashOnHand("USD"); ?>' disabled>
                                                 </td>
                                                 <td>
                                                     <input class="form-control text-right" id="sheetPurchaseTotalUSD" type="text" value="0" disabled>
@@ -400,8 +640,106 @@
                                             </tr>
                                         </tbody>
                                     </table>
+                                    
+                                    
+                                    <button type="button" id="toggleCurrencyConvBtn" class="btn btn-default" onclick="toggleCurrencyConv();">Request Currency Conversion</button>
+
+                                    <div id="currencyConvDiv" style="display: block; padding-top: 20px;">
+                                        <table id="conv_table" class="table table-striped table-bordered" style="width:300;">
+                                            <thead>
+                                                <tr>
+                                                    <th colspan="3" style="text-align: center;">Currency Conversion Request</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td style="vertical-align: middle;">From</td>
+                                                    <td>
+                                                        <input class="form-control text-right" id="fromValue" type="number" value="1">
+                                                    </td>
+                                                    <td>
+                                                        <input class="form-control text-left" id="fromCurrency" type="text" value="CAD" disabled>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <span style="font-size: 11px;">Exchange Rate</span>
+                                                    </td>
+                                                    <td>
+                                                        <input class="form-control text-right" id="exchangeRate" type="number" value="0" disabled>
+                                                    </td>
+                                                    <td>
+                                                        <button type="button" id="switchCurrBtn" class="btn btn-default btn-block" onclick="getExchangeRate();"><span class="glyphicon glyphicon-resize-vertical"></span></button>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="vertical-align: middle;">To</td>
+                                                    <td>
+                                                        <input class="form-control text-right" id="toValue" type="number" value="0">
+                                                    </td>
+                                                    <td>
+                                                        <input class="form-control text-left" id="toCurrency" type="text" value="USD" disabled>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    <button type="button" class="btn btn-default" onclick="startOver();">Clear All</button>
+                                    <button type="button" class="btn btn-primary" onclick="prepareSheet();">Prepare Sheet</button>
+                                    
+                                    
+                                </div>
+                                <div style="clear: both;">
+
+                                    
+
+                                    <div id="preparedSheetDiv" style="display: none; padding-top: 20px;">
+                                        <table id="preparedTable" class="table table-striped table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th style="width:120px;">SYMBOL</th>
+                                                    <th style="width:150px;">ISIN Number</th>
+                                                    <th>NAME</th>
+                                                    <th style="width:60px;">COUNTRY</th>
+                                                    <th style="width:60px;">SIDE</th>
+                                                    <th style="width:100px;">SHARES</th>
+                                                    <th style="width:110px;">ORDER TYPE</th>
+                                                    <th style="width:100px;">LIMITPRICE</th>
+                                                    <th style="width:150px;">TOTAL</th>
+                                                    <th style="width:150px;">Account#</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="preparedTableTbody">
+                                            </tbody>
+
+                                        </table>
+
+                                        <table id="email_table" class="table table-striped table-bordered" style="width:300;">
+                                            <tbody>
+                                                <tr>
+                                                    <td>McGill ID:</td>
+                                                    <td>
+                                                        <input class="form-control" id="userEmail" type="email" placeholder="Your McGill email address">
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Password:</td>
+                                                    <td>
+                                                        <input class="form-control" id="sheetSaleTotalUSD" type="password">
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+
+                                        <button type="button" class="btn btn-primary" onclick="sendEmail();">Send Email</button>
+                                        <button type="button" class="btn btn-default" onclick="startOver();">Start Over</button>
+
+                                    </div>
+
                                 </div>
                             </div>
+                            <!--.panel-body -->
                         </div>
                         <!--.tab-pane -->
                         <div class="tab-pane" id="stocks">

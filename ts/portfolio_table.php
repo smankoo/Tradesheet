@@ -1,9 +1,13 @@
 <?php
+session_start();
+
 require_once 'connectdb.php';
 $table = 'Portfolio';
 
+$TRD_GRP = $_SESSION['trading_group'];
+
 // sending query
-$result = mysql_query("select * from portfolio");
+$result = mysql_query("select * from portfolio where trading_group = '" . $_SESSION['trading_group'] . "'" );
 if (!$result) {
     die("Query to show fields from table failed");
 }
@@ -56,8 +60,8 @@ h1{
 }
 
 </style>
-		<head><title>Concierge Clients</title></head>";
-echo "<h1>Table: {$table}</h1>";
+		<head><title></title></head>";
+echo "<h1>Table: {$table} for Trading Group : {$TRD_GRP} </h1>";
 echo "<table id=\"conc_clients\"><tr>";
 // printing table headers
 for($i=0; $i<$fields_num; $i++)

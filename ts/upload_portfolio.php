@@ -19,9 +19,10 @@
             //Upload File
             if (!empty($_POST['submit'])) {
 
+            start_session();
             include "connectdb.php"; //Connect to Database
 
-            $deleterecords = "TRUNCATE TABLE stocks"; //empty the table of its current records
+            $deleterecords = "delete from portfolio where trading_group = '" . $_SESSION['trading_group'] . "'"; //empty the table of its current records
             mysql_query($deleterecords);
 
             
@@ -89,12 +90,12 @@
                     
                     // Build the SQL
                     if ( $i == 2 ){
-                        $remove="delete from portfolio where reporting_acc = '" . $rep_acc_no . "'";
+                        $remove="delete from portfolio where trading_group = '" . $rep_acc_no . "'";
                         mysql_query($remove) or die(mysql_error());
                     }
                     
                     
-                    $import="INSERT into portfolio(reporting_acc,
+                    $import="INSERT into portfolio(trading_group,
                             security_description,
                             local_currency_code,
                             shares_par,

@@ -61,7 +61,7 @@ h1{
 
 </style>
 		<head><title></title></head>";
-echo "<h1>Table: {$table} for Trading Group : {$TRD_GRP} </h1>";
+echo "<h1>Portfolio of Trading Group : {$TRD_GRP} </h1>";
 echo "<table id=\"conc_clients\"><tr>";
 // printing table headers
 for($i=0; $i<$fields_num; $i++)

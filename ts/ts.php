@@ -52,7 +52,7 @@
             var cell10 = row.insertCell(9);
             var cell11 = row.insertCell(10);
 
-            cell1.innerHTML = "<input class=\"form-control\" id=\"symbol" + row_num + "\" type=\"text\" onkeyup=\"javascript:capitalize(this.id, this.value);\" onblur=\"getStockInfoYahoo(" + row_num + ");\">";
+            cell1.innerHTML = "<input class=\"form-control\" id=\"symbol" + row_num + "\" type=\"text\" onkeyup=\"javascript:capitalize(this.id, this.value);\" onblur=\"populateStockInfo(" + row_num + ");\">";
             cell2.innerHTML = "<input class=\"form-control\" id=\"isinNumber" + row_num + "\" type=\"text\">";
             cell3.innerHTML = "<input class=\"form-control\" id=\"securityName" + row_num + "\" type=\"text\">";
             cell4.innerHTML = "<select class=\"combobox\" id=\"country" + row_num + "\"> <option value=\"\"></option> <option value=\"usa\">USA</option> <option value=\"canada\">Canada</option> </select>";
@@ -111,7 +111,17 @@
                 xmlhttp.onreadystatechange = function () {
                     if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
 
-                        if (xmlhttp.responseText != "NOTFOUND") {
+                        if (xmlhttp.responseText == "NOTCURRENT") {
+                            document.getElementById("uploadPortfolioBtn").focus();
+                            alert("Please upload current portfolio with run_date of today");
+                        } else if (xmlhttp.responseText == "NOTFOUND") {
+                            document.getElementById("isinNumber" + rowid).value = "";
+                            document.getElementById("isinNumber" + rowid).disabled = false;
+
+                            document.getElementById("maxShares" + rowid).value = "0";
+                            document.getElementById("shares" + rowid).max = "0";
+
+                        } else {
 
                             var responseJson = JSON.parse(xmlhttp.responseText);
 
@@ -127,12 +137,8 @@
                                 populateMaxShares(rowid);
                             }
 
-                        } else {
-                            document.getElementById("isinNumber" + rowid).value = "";
-                            document.getElementById("isinNumber" + rowid).disabled = false;
-
-                            document.getElementById("maxShares" + rowid).value = "0";
-                            document.getElementById("shares" + rowid).max = "0";
+                            // Let's get stock price
+                            getStockInfoYahoo(rowid);
                         }
 
                     }
@@ -381,6 +387,7 @@
 
             document.getElementById("preparedSheetDiv").style.display = 'block';
             prepareCurrencyConvTable();
+            prepareSalePurchaseTables();
 
         }
 
@@ -412,8 +419,15 @@
             document.getElementById(textboxid).value = str;
         }
 
+        function populateStockInfo(rowid) {
+            //Get the ISIN Number from DB
+            populateStockInfoFromDB(rowid);
+
+        }
+
         function getStockInfoYahoo(rowid) {
             var str = document.getElementById("symbol" + rowid).value;
+
 
             // Check for blankness
             if (str == "") {
@@ -458,8 +472,7 @@
                             populateMaxShares(rowid);
                         }
 
-                        //Get the ISIN Number from DB
-                        populateStockInfoFromDB(rowid);
+
                         updateRowTotal(rowid);
                     }
                 };
@@ -632,6 +645,104 @@
             }
 
         }
+
+        function pageloadCheckPortfolio() {
+
+            if (window.XMLHttpRequest) {
+                // code for IE7+, Firefox, Chrome, Opera, Safari
+                xmlhttp = new XMLHttpRequest();
+            } else {
+                // code for IE6, IE5
+                xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+            }
+            xmlhttp.onreadystatechange = function () {
+                if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                    var portfolioStatus = xmlhttp.responseText;
+                    if (portfolioStatus == "CURRENT") {
+                        // If portfolio is not current, display the upload portfolio button
+                        document.getElementById("upload_portfolio_div").style.display = 'none';
+                    } else {
+                        // If portfolio is current, hide the upload portfolio button
+                        document.getElementById("upload_portfolio_div").style.display = 'block';
+                    }
+                }
+            };
+
+            xmlhttp.open("GET", "checkPortfolio.php", true);
+            xmlhttp.send();
+        }
+
+        function prepareSalePurchaseTables() {
+            var table = document.getElementById("purchase_table_prepped_tbody");
+            table.innerHTML = "";
+            var row = table.insertRow(table.rows.length);
+            var cell1 = row.insertCell(0);
+            var cell2 = row.insertCell(1);
+            var cell3 = row.insertCell(2);
+
+            cell1.innerHTML = "CAD";
+            cell1.style = "vertical-align: middle;";
+
+            cell2.innerHTML = document.getElementById("cashAtHandCAD").value;
+            cell3.innerHTML = document.getElementById("sheetPurchaseTotalCAD").value;
+
+            var row = table.insertRow(table.rows.length);
+            var cell1 = row.insertCell(0);
+            var cell2 = row.insertCell(1);
+            var cell3 = row.insertCell(2);
+
+            cell1.innerHTML = "USD";
+            cell1.style = "vertical-align: middle;";
+
+            cell2.innerHTML = document.getElementById("cashAtHandUSD").value;
+            cell3.innerHTML = document.getElementById("sheetPurchaseTotalUSD").value;
+
+            var table = document.getElementById("sale_table_prepped_tbody");
+            table.innerHTML = "";
+            var row = table.insertRow(table.rows.length);
+            var cell1 = row.insertCell(0);
+            var cell2 = row.insertCell(1);
+
+            cell1.innerHTML = "CAD";
+            cell1.style = "vertical-align: middle;";
+
+            cell2.innerHTML = document.getElementById("sheetSaleTotalCAD").value;
+
+            var row = table.insertRow(table.rows.length);
+            var cell1 = row.insertCell(0);
+            var cell2 = row.insertCell(1);
+
+            cell1.innerHTML = "USD";
+            cell1.style = "vertical-align: middle;";
+            cell2.innerHTML = document.getElementById("sheetSaleTotalUSD").value;
+        }
+
+        function sendEmail() {
+            if (window.XMLHttpRequest) {
+                // code for IE7+, Firefox, Chrome, Opera, Safari
+                xmlhttp = new XMLHttpRequest();
+            } else {
+                // code for IE6, IE5
+                xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+            }
+            xmlhttp.onreadystatechange = function () {
+                if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                    var emailStatus = xmlhttp.responseText;
+                    alert(emailStatus);
+                    if (portfolioStatus == "SUCCESS") {
+                        // 
+                        alert("Mail sent successfully");
+                    } else {
+                        // 
+                        alert("Error while sending email");
+                    }
+                }
+            };
+            alert("Trying to send email");
+            xmlhttp.open("POST", "sendEmail.php", true);
+            xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+            xmlhttp.send("user_email=" + document.getElementById("userEmail").value + "&user_pass=" + document.getElementById("userPass").value + "&email_body=" + document.getElementById("email_body_div").innerHTML );
+        }
     </script>
 
 
@@ -656,7 +767,7 @@
     <![endif]-->
 </head>
 
-<body>
+<body onload="pageloadCheckPortfolio();">
 
     <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
         <div class="container col-lg-12">
@@ -679,22 +790,22 @@
                 </ul>
                 <div class="navbar-header pull-right">
 
-                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
 
-                <p class="navbar-text">
-                    <b> <?php echo $_SESSION['user_email']; ?> </b>
-                     <?php echo $_SESSION['trading_group']; ?> 
-                    <ul class="nav navbar-nav">
-                        <li><a href="?logout">Logout</a></li>
-                    </ul>
-                </p>
+                    <p class="navbar-text">
+                        <b> <?php echo $_SESSION['user_email']; ?> </b>
+                        <?php echo $_SESSION['trading_group']; ?>
+                            <ul class="nav navbar-nav">
+                                <li><a href="?logout">Logout</a></li>
+                            </ul>
+                    </p>
+                </div>
             </div>
-            </div>
-            
+
             <!--.nav-collapse -->
         </div>
     </nav>
@@ -712,9 +823,20 @@
                                 <h3><?php echo $_SESSION['trading_group']; ?></h3>
                             </div>
                             <div class="panel-body">
+                                <div id="upload_portfolio_div" style="display: none;">
+                                    <a href="upload_portfolio.php" class="btn btn-primary" data-toggle="modal" data-target="#myModal2" id="uploadPortfolioBtn">Upload New Portfolio</a>
+                                    <div id="myModal2" class="modal fade">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <!-- Content will be loaded here from "upload_portfolio.php" file -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <p class="text-right">
                                     <button type="button" class="btn btn-default" onclick="addRow();">Add Row</button>
-                                    <button type="button" class="btn btn-default" onclick="location.href='?logout'">|| Logout ||</button>
+                                    <button type="button" class="btn btn-default" onclick="pageloadCheckPortfolio();">-- Test --</button>
                                 </p>
                                 <table id="stocks_table" class="table table-striped table-bordered">
                                     <thead>
@@ -735,7 +857,7 @@
                                     <tbody id="stocks_table_tbody">
                                         <tr>
                                             <td>
-                                                <input class="form-control" id="symbol1" type="text" onkeyup="javascript:capitalize(this.id, this.value);" onblur="getStockInfoYahoo(1);">
+                                                <input class="form-control" id="symbol1" type="text" onkeyup="javascript:capitalize(this.id, this.value);" onblur="populateStockInfo(1);">
                                             </td>
                                             <td>
                                                 <input class="form-control" id="isinNumber1" type="text">
@@ -892,57 +1014,88 @@
 
 
                                     <div id="preparedSheetDiv" style="display: none; padding-top: 20px;">
-                                        <table id="preparedTable" class="table table-striped table-bordered">
-                                            <thead>
-                                                <tr>
-                                                    <th style="width:120px;">SYMBOL</th>
-                                                    <th style="width:150px;">ISIN Number</th>
-                                                    <th>NAME</th>
-                                                    <th style="width:60px;">COUNTRY</th>
-                                                    <th style="width:60px;">SIDE</th>
-                                                    <th style="width:100px;">SHARES</th>
-                                                    <th style="width:110px;">ORDER TYPE</th>
-                                                    <th style="width:110px;">MKT/LIMIT</th>
-                                                    <th style="width:100px;">PRICE</th>
-                                                    <th style="width:150px;">TOTAL</th>
-                                                    <th style="width:150px;">Account#</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="preparedTableTbody">
-                                            </tbody>
-
-                                        </table>
-
-                                        <div id="preppedCurrencyConvDiv" style="display: block; padding-top: 20px; max-width: 450px; margin: auto;">
-                                            <table id="prepped_conv_table" class="table table-striped table-bordered">
+                                        <div id="email_body_div" style=" border-style: solid; border-width: 2px;;">
+                                            <table id="preparedTable" class="table table-striped table-bordered">
                                                 <thead>
                                                     <tr>
-                                                        <th colspan="3" style="text-align: center;">Currency Conversion Request</th>
+                                                        <th style="width:120px;">SYMBOL</th>
+                                                        <th style="width:150px;">ISIN Number</th>
+                                                        <th>NAME</th>
+                                                        <th style="width:60px;">COUNTRY</th>
+                                                        <th style="width:60px;">SIDE</th>
+                                                        <th style="width:100px;">SHARES</th>
+                                                        <th style="width:110px;">ORDER TYPE</th>
+                                                        <th style="width:110px;">MKT/LIMIT</th>
+                                                        <th style="width:100px;">PRICE</th>
+                                                        <th style="width:150px;">TOTAL</th>
+                                                        <th style="width:150px;">Account#</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody id="prepped_conv_table_tbody">
+                                                <tbody id="preparedTableTbody">
+                                                </tbody>
+
+                                            </table>
+
+                                            <div id="preppedCurrencyConvDiv" style="display: block; padding-top: 20px; max-width: 450px; margin: auto;">
+                                                <table id="prepped_conv_table" class="table table-striped table-bordered">
+                                                    <thead>
+                                                        <tr>
+                                                            <th colspan="3" style="text-align: center;">Currency Conversion Request</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="prepped_conv_table_tbody">
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div style="display: block; padding-top: 20px; max-width: 450px; margin: auto;">
+                                                <table id="purchase_table_prepped" class="table table-striped table-bordered" style="width:300;">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Purchase Table</th>
+                                                            <th style="width:170px;">Cash at Hand</th>
+                                                            <th style="width:150px;">Sheet Total</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="purchase_table_prepped_tbody">
+                                                    </tbody>
+                                                </table>
+
+                                                <table id="sale_table_prepped" class="table table-striped table-bordered" style="width:300;">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Sale Table</th>
+                                                            <th style="width:150px;">Sheet Total</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="sale_table_prepped_tbody">
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <form>
+                                            <table id="email_table" class="table table-striped table-bordered" style="width:300;">
+                                                <tbody>
+                                                    <tr>
+                                                        <td>McGill ID:</td>
+                                                        <td>
+                                                            <input class="form-control" id="userEmail" type="email" value="<?php print $_SESSION['user_email']; ?>">
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Password:</td>
+                                                        <td>
+                                                            <input class="form-control" id="userPass" type="password" placeholder="You McGill Email Password">
+                                                        </td>
+                                                    </tr>
                                                 </tbody>
                                             </table>
-                                        </div>
+                                            <input type="hidden" name="email_body_field" value="">
 
-                                        <table id="email_table" class="table table-striped table-bordered" style="width:300;">
-                                            <tbody>
-                                                <tr>
-                                                    <td>McGill ID:</td>
-                                                    <td>
-                                                        <input class="form-control" id="userEmail" type="email" placeholder="Your McGill email address">
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Password:</td>
-                                                    <td>
-                                                        <input class="form-control" id="sheetSaleTotalUSD" type="password">
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
 
-                                        <button type="button" class="btn btn-primary" onclick="sendEmail();">Send Email</button>
+
+                                            <button type="button" class="btn btn-primary" onclick="sendEmail();">Send Email</button>
+                                        </form>
+
                                         <button type="button" class="btn btn-default" onclick="startOver();">Start Over</button>
 
                                     </div>
@@ -984,15 +1137,18 @@
                                     <div id="myModal" class="modal fade">
                                         <div class="modal-dialog">
                                             <div class="modal-content">
-                                                <!-- Content will be loaded here from "remote.php" file -->
+                                                <!-- Content will be loaded here from "upload_portfolio.php" file -->
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+
                             </div>
                         </div>
                         <!--.tab-pane -->
+
                     </div>
+
 
                 </div>
             </div>

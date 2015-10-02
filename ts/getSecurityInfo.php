@@ -1,4 +1,5 @@
 <?php
+session_start();
 
 // Check to make sure some value of the symbol was entered
 if (empty($_GET['sym'])) {
@@ -13,6 +14,25 @@ else {
 
 // Connect to the database
 require_once 'connectdb.php';
+
+// Check if portfolio is fresh
+$query = "select count(*) port_count from portfolio where upper(trading_group) = upper('" . $_SESSION['trading_group'] . "') and report_run_date = curdate()";
+
+// sending query
+$result = mysql_query($query);
+if (!$result) {
+    die("Query to show fields from table failed");
+}
+
+$row = mysql_fetch_assoc($result);
+
+$port_count = $row["port_count"];
+
+if ( $port_count <= 0 ) {
+    // If no good record found, report portfolio as non current
+    print "NOTCURRENT";
+    exit;
+}
 
 
 // sending query

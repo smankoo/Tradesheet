@@ -848,7 +848,6 @@
 
                                 <p class="text-right">
                                     <button type="button" class="btn btn-default" onclick="addRow();">Add Row</button>
-                                    <button type="button" class="btn btn-default" onclick="pageloadCheckPortfolio();">-- Test --</button>
                                 </p>
                                 <table id="stocks_table" class="table table-striped table-bordered">
                                     <thead>

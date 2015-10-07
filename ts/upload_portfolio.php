@@ -40,7 +40,7 @@ session_start();
                 $handle = fopen($_FILES['filename']['tmp_name'], "r");
 
                 $i = 0;
-                while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
+                while (($data = fgetcsv($handle, 0, ",")) !== FALSE) {
 
                     $i = $i + 1;
                     
@@ -54,8 +54,14 @@ session_start();
                     foreach ($data as &$value) {
                         $value = addslashes ($value);
                     }
-                    
+                
                     $rep_acc_no_raw = $data[0];
+                    
+                    if ( $rep_acc_no_raw == "" ) {
+                        // If for some reason there's a blank account number, skip this row
+                        continue;
+                    }
+                    
                     $sec_desc =  $data[5];
                     $ticker = $data[49];
                     $isin = $data[50];
@@ -86,7 +92,7 @@ session_start();
                     //echo "rep_acc_no " .  $rep_acc_no  . " </br>";
                     
                     $base_market_value_total = $base_market_value + $base_net_income_rec;
-                                        
+                    
                     $report_run_date_formatted = date_format(date_create_from_format('n/j/Y',$report_run_date ),'Y-m-d');
 
                     

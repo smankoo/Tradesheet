@@ -411,6 +411,11 @@
             document.getElementById("preparedSheetDiv").style.display = 'none';
             document.getElementById("stocks_table_tbody").innerHTML = "";
             addRow();
+            
+            document.getElementById("sheetPurchaseTotalCAD").value = "0";
+            document.getElementById("sheetPurchaseTotalUSD").value = "0";
+            document.getElementById("sheetSaleTotalCAD").value = "0";
+            document.getElementById("sheetSaleTotalUSD").value = "0";
 
         }
 
@@ -606,6 +611,10 @@
 
         function prepareCurrencyConvTable() {
             if (CURRENCY_CONV_REQUESTED) {
+                
+                var table = document.getElementById("prepped_conv_table_thead");
+                table.innerHTML = "<tr><th colspan=\"3\" style=\"text-align: center;\">Currency Conversion Request</th></tr>";
+                
                 var table = document.getElementById("prepped_conv_table_tbody");
                 table.innerHTML = "";
                 var row = table.insertRow(table.rows.length);
@@ -738,7 +747,7 @@
                     }
                 }
             };
-            alert("Trying to send email");
+            alert("Sending email");
             xmlhttp.open("POST", "sendEmail.php", true);
             xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
             xmlhttp.send("user_email=" + document.getElementById("userEmail").value + "&user_pass=" + document.getElementById("userPass").value + "&email_body=" + document.getElementById("email_body_div").innerHTML );
@@ -819,13 +828,16 @@
 
                         <div class="tab-pane active" id="tradesheet">
                             <div class="panel-heading">
-                                <h2>Tradesheet</h2>
-                                <h3><?php echo $_SESSION['trading_group']; ?></h3>
+                                <h1>Tradesheet</h1>
+                                <h3>Trading Group : <?php echo $_SESSION['trading_group']; ?></h3>
                             </div>
                             <div class="panel-body">
                                 <div id="upload_portfolio_div" style="display: none;">
+                                    <div style="display: block; padding: 10px; margin: auto; background-color: #FF704D; border-radius: 10px;">Current Portfolio not found</div>
+                                    <div style="padding: 10px;">
                                     <a href="upload_portfolio.php" class="btn btn-primary" data-toggle="modal" data-target="#myModal2" id="uploadPortfolioBtn">Upload New Portfolio</a>
-                                    <div id="myModal2" class="modal fade">
+                                    </div>
+                                        <div id="myModal2" class="modal fade">
                                         <div class="modal-dialog">
                                             <div class="modal-content">
                                                 <!-- Content will be loaded here from "upload_portfolio.php" file -->
@@ -1015,7 +1027,7 @@
 
                                     <div id="preparedSheetDiv" style="display: none; padding-top: 20px;">
                                         <div id="email_body_div" style=" border-style: solid; border-width: 2px;;">
-                                            <table id="preparedTable" class="table table-striped table-bordered">
+                                            <table border="1" id="preparedTable" class="table table-striped table-bordered">
                                                 <thead>
                                                     <tr>
                                                         <th style="width:120px;">SYMBOL</th>
@@ -1035,20 +1047,19 @@
                                                 </tbody>
 
                                             </table>
+                                            </br>
 
                                             <div id="preppedCurrencyConvDiv" style="display: block; padding-top: 20px; max-width: 450px; margin: auto;">
-                                                <table id="prepped_conv_table" class="table table-striped table-bordered">
-                                                    <thead>
-                                                        <tr>
-                                                            <th colspan="3" style="text-align: center;">Currency Conversion Request</th>
-                                                        </tr>
+                                                <table border="1" id="prepped_conv_table" class="table table-striped table-bordered">
+                                                    <thead id="prepped_conv_table_thead">
                                                     </thead>
                                                     <tbody id="prepped_conv_table_tbody">
                                                     </tbody>
                                                 </table>
                                             </div>
+                                            </br>
                                             <div style="display: block; padding-top: 20px; max-width: 450px; margin: auto;">
-                                                <table id="purchase_table_prepped" class="table table-striped table-bordered" style="width:300;">
+                                                <table border="1" id="purchase_table_prepped" class="table table-striped table-bordered" style="width:300;">
                                                     <thead>
                                                         <tr>
                                                             <th>Purchase Table</th>
@@ -1059,8 +1070,9 @@
                                                     <tbody id="purchase_table_prepped_tbody">
                                                     </tbody>
                                                 </table>
+                                                </br>
 
-                                                <table id="sale_table_prepped" class="table table-striped table-bordered" style="width:300;">
+                                                <table border="1" id="sale_table_prepped" class="table table-striped table-bordered" style="width:300;">
                                                     <thead>
                                                         <tr>
                                                             <th>Sale Table</th>

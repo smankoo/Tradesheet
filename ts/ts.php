@@ -179,18 +179,26 @@
                 xmlhttp.send();
             }
         }
+        
+        SHARE_COUNT_ERROR = false;
 
         function validateShareCount(rowid) {
             var maxShares = parseFloat(document.getElementById("maxShares" + rowid).value, 10);
             var shareCount = parseFloat(document.getElementById("shares" + rowid).value, 10);
             if (!shareCount) {
+                document.getElementById("shares" + rowid).style.backgroundColor = "";
+                document.getElementById("shares" + rowid).style.color = "";
                 return;
             }
             if (shareCount > maxShares) {
+                document.getElementById("shares" + rowid).style.backgroundColor = "red";
+                document.getElementById("shares" + rowid).style.color = "white";
                 alert("Number of shares is higher than the number of shares you own");
-                document.getElementById("shares" + rowid).focus();
-                document.getElementById("shares" + rowid).select();
+            } else {
+                document.getElementById("shares" + rowid).style.backgroundColor = "";
+                document.getElementById("shares" + rowid).style.color = "";
             }
+            validateSheet();
         }
 
         function updateSheetTotal() {
@@ -228,6 +236,7 @@
             document.getElementById("sheetSaleTotalUSD").value = sheetTotalSaleUSD;
 
             colorizeTotals();
+            
 
         }
 
@@ -266,6 +275,7 @@
                 document.getElementById("sheetPurchaseTotalUSD").style.color = "";
                 ERROR_STATUS_TOTAL_USD = false;
             }
+            validateSheet();
         }
 
         function setMaxFromConv() {
@@ -752,6 +762,41 @@
             xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
             xmlhttp.send("user_email=" + document.getElementById("userEmail").value + "&user_pass=" + document.getElementById("userPass").value + "&email_body=" + document.getElementById("email_body_div").innerHTML );
         }
+        
+        function validateSheet(){
+            
+            var ERROR_STATUS_SHARES = false;
+            
+            var oInputs = new Array();
+            oInputs = document.getElementsByTagName('input'); // store collection of all <input/> elements
+
+            var calc_row_num;
+
+            for (i = 0; i < oInputs.length; i++) {
+                // loop through and find <input type="number"/>
+                if (oInputs[i].type == 'number' && oInputs[i].id.substring(0, 6) == 'shares') {
+                    calc_row_num = oInputs[i].id.substring(6, 7);
+
+                    if (document.getElementById("shares" + calc_row_num).value > document.getElementById("maxShares" + calc_row_num).value) {
+                        ERROR_STATUS_SHARES = true;
+                        break;
+                    }
+                }
+            }
+            
+            if ( ERROR_STATUS_TOTAL_CAD || ERROR_STATUS_TOTAL_USD || ERROR_STATUS_SHARES ) {
+                document.getElementById('btnPrepareSheet').className = "btn btn-disabled";
+                document.getElementById('btnPrepareSheet').onclick = errorInSheet;
+                
+            } else {
+                document.getElementById('btnPrepareSheet').className = "btn btn-primary";
+                document.getElementById('btnPrepareSheet').onclick = prepareSheet;
+            }
+            
+        }
+        function errorInSheet(){
+            alert("Please correct the errors in the sheet");
+        }
     </script>
 
 
@@ -1016,7 +1061,7 @@
                                     </div>
 
                                     <button type="button" class="btn btn-default" onclick="startOver();">Clear All</button>
-                                    <button type="button" class="btn btn-primary" onclick="prepareSheet();">Prepare Sheet</button>
+                                    <button type="button" id="btnPrepareSheet" class="btn">Prepare Sheet</button>
 
 
                                 </div>

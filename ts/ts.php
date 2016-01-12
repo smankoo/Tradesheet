@@ -10,6 +10,16 @@
     <link rel="shortcut icon" href="">
     <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="bootstrap/css/bootstrap-theme.min.css">
+    
+    <style>
+        .loadinggif 
+        {
+           background:
+             url('custom/ajax-loader.gif')
+             no-repeat
+             right center;
+        }
+    </style>
 
     <script type="text/javascript">
         // Javascript to enable link to tab
@@ -441,6 +451,9 @@
         }
 
         function getStockInfoYahoo(rowid) {
+            $('#securityName' + rowid).addClass('loadinggif');
+            $("limitPrice" + rowid).addClass('loadinggif');
+            
             var str = document.getElementById("symbol" + rowid).value;
 
 
@@ -477,8 +490,13 @@
                         var responseJson = JSON.parse(xmlhttp.responseText);
                         //alert(xmlhttp.responseText);
                         stockPrice = responseJson.query.results.quote.LastTradePriceOnly;
+                        
+                        $('#limitPrice' + rowid).removeClass('loadinggif');
+                        
                         document.getElementById("limitPrice" + rowid).value = stockPrice;
                         document.getElementById("limitPrice" + rowid).disabled = true;
+
+                        $('#securityName' + rowid).removeClass('loadinggif');
 
                         document.getElementById("securityName" + rowid).value = responseJson.query.results.quote.Name;
                         document.getElementById("securityName" + rowid).disabled = true;
@@ -777,7 +795,7 @@
                 if (oInputs[i].type == 'number' && oInputs[i].id.substring(0, 6) == 'shares') {
                     calc_row_num = oInputs[i].id.substring(6, 7);
 
-                    if (document.getElementById("shares" + calc_row_num).value > document.getElementById("maxShares" + calc_row_num).value) {
+                    if ( document.getElementById("side" + calc_row_num).value == "sell" && (document.getElementById("shares" + calc_row_num).value > document.getElementById("maxShares" + calc_row_num).value)) {
                         ERROR_STATUS_SHARES = true;
                         break;
                     }
@@ -880,12 +898,12 @@
                                 <div id="upload_portfolio_div" style="display: none;">
                                     <div style="display: block; padding: 10px; margin: auto; background-color: #FF704D; border-radius: 10px;">Current Portfolio not found</div>
                                     <div style="padding: 10px;">
-                                    <a href="upload_portfolio.php" class="btn btn-primary" data-toggle="modal" data-target="#myModal2" id="uploadPortfolioBtn">Upload New Portfolio</a>
+                                    <a href="upload_portfolio2.php" class="btn btn-primary" data-toggle="modal" data-target="#myModal2" id="uploadPortfolioBtn">Upload New Portfolio</a>
                                     </div>
                                         <div id="myModal2" class="modal fade">
                                         <div class="modal-dialog">
                                             <div class="modal-content">
-                                                <!-- Content will be loaded here from "upload_portfolio.php" file -->
+                                                <!-- Content will be loaded here from "upload_portfolio2.php" file -->
                                             </div>
                                         </div>
                                     </div>
@@ -1033,7 +1051,7 @@
                                                         <input class="form-control text-right" id="fromValue" type="number" value="1" onkeyup="updateToCurrValue();" onchange="updateToCurrValue();">
                                                     </td>
                                                     <td>
-                                                        <input class="form-control text-left" id="fromCurrency" type="text" value="CAD" disabled>
+                                                        <input class="form-control text-left" id="fromCurrency" type="text" value="USD" disabled>
                                                     </td>
                                                 </tr>
                                                 <tr>
@@ -1053,7 +1071,7 @@
                                                         <input class="form-control text-right" id="toValue" type="number" value="0" onkeyup="updateFromCurrValue();" onchange="updateFromCurrValue();">
                                                     </td>
                                                     <td>
-                                                        <input class="form-control text-left" id="toCurrency" type="text" value="USD" disabled>
+                                                        <input class="form-control text-left" id="toCurrency" type="text" value="CAD" disabled>
                                                     </td>
                                                 </tr>
                                             </tbody>
@@ -1187,13 +1205,13 @@
                                     <iframe class="embed-responsive-item" src="portfolio_table.php"></iframe>
                                 </div>
                                 <div class="text-right">
-                                    <a href="upload_portfolio.php" class="btn btn-primary" data-toggle="modal" data-target="#myModal">Upload New Portfolio</a>
+                                    <a href="upload_portfolio2.php" class="btn btn-primary" data-toggle="modal" data-target="#myModal">Upload New Portfolio</a>
 
                                     <!-- Modal HTML -->
                                     <div id="myModal" class="modal fade">
                                         <div class="modal-dialog">
                                             <div class="modal-content">
-                                                <!-- Content will be loaded here from "upload_portfolio.php" file -->
+                                                <!-- Content will be loaded here from "upload_portfolio2.php" file -->
                                             </div>
                                         </div>
                                     </div>

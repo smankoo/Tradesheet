@@ -910,7 +910,7 @@
                                 <div id="upload_portfolio_div" style="display: none;">
                                     <div style="display: block; padding: 10px; margin: auto; background-color: #FF704D; border-radius: 10px;">Current Portfolio not found</div>
                                     <div style="padding: 10px;">
-                                    <a href="upload_portfolio2.php" class="btn btn-primary" data-toggle="modal" data-target="#myModal2" id="uploadPortfolioBtn">Upload New Portfolio</a>
+                                    <!-- <a href="upload_portfolio2.php" class="btn btn-primary" data-toggle="modal" data-target="#myModal2" id="uploadPortfolioBtn">Upload New Portfolio</a>-->
                                     </div>
                                         <div id="myModal2" class="modal fade">
                                         <div class="modal-dialog">
@@ -1217,18 +1217,19 @@
                                 <div class="embed-responsive embed-responsive-16by9">
                                     <iframe class="embed-responsive-item" src="portfolio_table.php"></iframe>
                                 </div>
-                                <div class="text-right">
-                                    <a href="upload_portfolio2.php" class="btn btn-primary" data-toggle="modal" data-target="#myModal">Upload New Portfolio</a>
+                            
+                        <!--        <div class="text-right">-->
+                        <!--            <a href="upload_portfolio2.php" class="btn btn-primary" data-toggle="modal" data-target="#myModal">Upload New Portfolio</a>-->
 
                                     <!-- Modal HTML -->
-                                    <div id="myModal" class="modal fade">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <!-- Content will be loaded here from "upload_portfolio2.php" file -->
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                        <!--            <div id="myModal" class="modal fade">-->
+                        <!--                <div class="modal-dialog">-->
+                        <!--                    <div class="modal-content">-->
+                        <!--                        <!-- Content will be loaded here from "upload_portfolio2.php" file -->
+                        <!--                    </div>-->
+                        <!--                </div>-->
+                        <!--            </div>-->
+                        <!--        </div>-->
 
                             </div>
                         </div>

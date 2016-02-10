@@ -815,6 +815,8 @@
         function errorInSheet(){
             alert("Please correct the errors in the sheet");
         }
+        
+
     </script>
 
 
@@ -856,9 +858,14 @@
             <div class="collapse navbar-collapse">
                 <ul class="nav navbar-nav">
                     <li class="active"><a href="#tradesheet" data-toggle="tab">Home</a></li>
-                    <li><a href="#students" data-toggle="tab">Students</a></li>
-                    <li><a href="#stocks" data-toggle="tab" onclick="loadStocks();">Stocks</a></li>
                     <li><a href="#portfolio" data-toggle="tab">Portfolio</a></li>
+                    <li><a href="#stocks" data-toggle="tab" onclick="loadStocks();">Stocks</a></li>
+                    <?php
+                        if ($_SESSION['admin'] == 1){
+                            echo "<li><a href=\"#students\" data-toggle=\"tab\">Students</a></li>";
+                        }
+                    ?>
+ 
                 </ul>
                 <div class="navbar-header pull-right">
 
@@ -869,6 +876,11 @@
                     </button>
 
                     <p class="navbar-text">
+                        <?php
+                            if ($_SESSION['admin'] == 1){
+                                echo "admin";
+                            }
+                        ?>
                         <b> <?php echo $_SESSION['user_email']; ?> </b>
                         <?php echo $_SESSION['trading_group']; ?>
                             <ul class="nav navbar-nav">
@@ -1168,9 +1180,10 @@
 
 
                                             <button type="button" class="btn btn-primary" onclick="sendEmail();">Send Email</button>
+                                            <button type="button" class="btn btn-default" onclick="startOver();">Start Over</button>
                                         </form>
 
-                                        <button type="button" class="btn btn-default" onclick="startOver();">Start Over</button>
+                                        
 
                                     </div>
 

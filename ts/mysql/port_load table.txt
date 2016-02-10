@@ -89,8 +89,8 @@ report_run_date       date       ,
 ticker                varchar(20),
 isin                  varchar(20));
 
-drop view if exists portfolio_ready;
-create view portfolio_ready as
+drop view if exists portfolio;
+create view portfolio as
 select CONCAT(left(reporting_account_number,8),right(reporting_account_number,3)) trading_group,
 security_description_1 security_description,
 local_currency_code,

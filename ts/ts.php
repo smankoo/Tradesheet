@@ -10,14 +10,10 @@
     <link rel="shortcut icon" href="">
     <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="bootstrap/css/bootstrap-theme.min.css">
-    
+
     <style>
-        .loadinggif 
-        {
-           background:
-             url('custom/ajax-loader.gif')
-             no-repeat
-             right center;
+        .loadinggif {
+            background: url('custom/ajax-loader.gif') no-repeat right center;
         }
     </style>
 
@@ -189,7 +185,7 @@
                 xmlhttp.send();
             }
         }
-        
+
         SHARE_COUNT_ERROR = false;
 
         function validateShareCount(rowid) {
@@ -246,7 +242,7 @@
             document.getElementById("sheetSaleTotalUSD").value = sheetTotalSaleUSD;
 
             colorizeTotals();
-            
+
 
         }
 
@@ -431,7 +427,7 @@
             document.getElementById("preparedSheetDiv").style.display = 'none';
             document.getElementById("stocks_table_tbody").innerHTML = "";
             addRow();
-            
+
             document.getElementById("sheetPurchaseTotalCAD").value = "0";
             document.getElementById("sheetPurchaseTotalUSD").value = "0";
             document.getElementById("sheetSaleTotalCAD").value = "0";
@@ -452,8 +448,8 @@
 
         function getStockInfoYahoo(rowid) {
             $('#securityName' + rowid).addClass('loadinggif');
-            $("limitPrice" + rowid).addClass('loadinggif');
-            
+            $("#limitPrice" + rowid).addClass('loadinggif');
+
             var str = document.getElementById("symbol" + rowid).value;
 
 
@@ -466,7 +462,10 @@
                 // Convert to Yahoo String
                 var stockName = str.substr(0, str.indexOf(" "));
                 var stockCountry = str.substr(str.indexOf(" ") + 1);
-                var yahooStr = stockName;
+                // Convert / to - for yahoo lookup
+                var yahooStr = stockName.replace("/", "-");;
+
+
                 if (stockCountry == "US") {
                     document.getElementById("country" + rowid).value = "usa";
                     document.getElementById("country" + rowid).disabled = true;
@@ -490,9 +489,9 @@
                         var responseJson = JSON.parse(xmlhttp.responseText);
                         //alert(xmlhttp.responseText);
                         stockPrice = responseJson.query.results.quote.LastTradePriceOnly;
-                        
+
                         $('#limitPrice' + rowid).removeClass('loadinggif');
-                        
+
                         document.getElementById("limitPrice" + rowid).value = stockPrice;
                         document.getElementById("limitPrice" + rowid).disabled = true;
 
@@ -510,7 +509,6 @@
                     }
                 };
 
-                //alert("Sending : getSecurityInfo.php?sym=" + str);
                 xmlhttp.open("GET", "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.quotes%20where%20symbol%20%3D%20%22" + yahooStr + "%22&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=", true);
                 xmlhttp.send();
             }
@@ -639,10 +637,10 @@
 
         function prepareCurrencyConvTable() {
             if (CURRENCY_CONV_REQUESTED) {
-                
+
                 var table = document.getElementById("prepped_conv_table_thead");
                 table.innerHTML = "<tr><th colspan=\"3\" style=\"text-align: center;\">Currency Conversion Request</th></tr>";
-                
+
                 var table = document.getElementById("prepped_conv_table_tbody");
                 table.innerHTML = "";
                 var row = table.insertRow(table.rows.length);
@@ -777,14 +775,14 @@
             };
             alert("Sending email");
             xmlhttp.open("POST", "sendEmail.php", true);
-            xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
-            xmlhttp.send("user_email=" + document.getElementById("userEmail").value + "&user_pass=" + document.getElementById("userPass").value + "&email_body=" + document.getElementById("email_body_div").innerHTML );
+            xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            xmlhttp.send("user_email=" + document.getElementById("userEmail").value + "&user_pass=" + document.getElementById("userPass").value + "&email_body=" + document.getElementById("email_body_div").innerHTML);
         }
-        
-        function validateSheet(){
-            
+
+        function validateSheet() {
+
             var ERROR_STATUS_SHARES = false;
-            
+
             var oInputs = new Array();
             oInputs = document.getElementsByTagName('input'); // store collection of all <input/> elements
 
@@ -795,28 +793,27 @@
                 if (oInputs[i].type == 'number' && oInputs[i].id.substring(0, 6) == 'shares') {
                     calc_row_num = oInputs[i].id.substring(6, 7);
 
-                    if ( document.getElementById("side" + calc_row_num).value == "sell" && (document.getElementById("shares" + calc_row_num).value > document.getElementById("maxShares" + calc_row_num).value)) {
+                    if (document.getElementById("side" + calc_row_num).value == "sell" && (document.getElementById("shares" + calc_row_num).value > document.getElementById("maxShares" + calc_row_num).value)) {
                         ERROR_STATUS_SHARES = true;
                         break;
                     }
                 }
             }
-            
-            if ( ERROR_STATUS_TOTAL_CAD || ERROR_STATUS_TOTAL_USD || ERROR_STATUS_SHARES ) {
+
+            if (ERROR_STATUS_TOTAL_CAD || ERROR_STATUS_TOTAL_USD || ERROR_STATUS_SHARES) {
                 document.getElementById('btnPrepareSheet').className = "btn btn-disabled";
                 document.getElementById('btnPrepareSheet').onclick = errorInSheet;
-                
+
             } else {
                 document.getElementById('btnPrepareSheet').className = "btn btn-primary";
                 document.getElementById('btnPrepareSheet').onclick = prepareSheet;
             }
-            
+
         }
-        function errorInSheet(){
+
+        function errorInSheet() {
             alert("Please correct the errors in the sheet");
         }
-        
-
     </script>
 
 
@@ -865,28 +862,23 @@
                             echo "<li><a href=\"#students\" data-toggle=\"tab\">Students</a></li>";
                         }
                     ?>
- 
+
                 </ul>
                 <div class="navbar-header pull-right">
-
-                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
-
                     <p class="navbar-text">
                         <?php
                             if ($_SESSION['admin'] == 1){
                                 echo "admin";
                             }
                         ?>
-                        <b> <?php echo $_SESSION['user_email']; ?> </b>
+                        <b><?php echo $_SESSION['user_email']; ?></b>
                         <?php echo $_SESSION['trading_group']; ?>
-                            <ul class="nav navbar-nav">
-                                <li><a href="?logout">Logout</a></li>
-                            </ul>
                     </p>
+                    
+                    <ul class="nav navbar-nav">
+                        <li><a href="mailto:sumeet.mankoo@mail.mcgill.ca?subject=Tradesheet%20Support">Contact Support</a></li>
+                        <li><a href="?logout">Logout</a></li>
+                    </ul>
                 </div>
             </div>
 
@@ -910,9 +902,9 @@
                                 <div id="upload_portfolio_div" style="display: none;">
                                     <div style="display: block; padding: 10px; margin: auto; background-color: #FF704D; border-radius: 10px;">Current Portfolio not found</div>
                                     <div style="padding: 10px;">
-                                    <!-- <a href="upload_portfolio2.php" class="btn btn-primary" data-toggle="modal" data-target="#myModal2" id="uploadPortfolioBtn">Upload New Portfolio</a>-->
+                                        <!-- <a href="upload_portfolio2.php" class="btn btn-primary" data-toggle="modal" data-target="#myModal2" id="uploadPortfolioBtn">Upload New Portfolio</a>-->
                                     </div>
-                                        <div id="myModal2" class="modal fade">
+                                    <div id="myModal2" class="modal fade">
                                         <div class="modal-dialog">
                                             <div class="modal-content">
                                                 <!-- Content will be loaded here from "upload_portfolio2.php" file -->
@@ -1179,11 +1171,9 @@
 
 
 
-                                            <button type="button" class="btn btn-primary" onclick="sendEmail();">Send Email</button>
-                                            <button type="button" class="btn btn-default" onclick="startOver();">Start Over</button>
+                                            <button id="sendEmailBtn" type="button" class="btn btn-primary" onclick="sendEmail();">Send Email</button>
+                                            <button id="startOverBtn" type="button" class="btn btn-default" onclick="startOver();">Start Over</button>
                                         </form>
-
-                                        
 
                                     </div>
 
@@ -1217,19 +1207,19 @@
                                 <div class="embed-responsive embed-responsive-16by9">
                                     <iframe class="embed-responsive-item" src="portfolio_table.php"></iframe>
                                 </div>
-                            
-                        <!--        <div class="text-right">-->
-                        <!--            <a href="upload_portfolio2.php" class="btn btn-primary" data-toggle="modal" data-target="#myModal">Upload New Portfolio</a>-->
 
-                                    <!-- Modal HTML -->
-                        <!--            <div id="myModal" class="modal fade">-->
-                        <!--                <div class="modal-dialog">-->
-                        <!--                    <div class="modal-content">-->
-                        <!--                        <!-- Content will be loaded here from "upload_portfolio2.php" file -->
-                        <!--                    </div>-->
-                        <!--                </div>-->
-                        <!--            </div>-->
-                        <!--        </div>-->
+                                <!--        <div class="text-right">-->
+                                <!--            <a href="upload_portfolio2.php" class="btn btn-primary" data-toggle="modal" data-target="#myModal">Upload New Portfolio</a>-->
+
+                                <!-- Modal HTML -->
+                                <!--            <div id="myModal" class="modal fade">-->
+                                <!--                <div class="modal-dialog">-->
+                                <!--                    <div class="modal-content">-->
+                                <!--                        <!-- Content will be loaded here from "upload_portfolio2.php" file -->
+                                <!--                    </div>-->
+                                <!--                </div>-->
+                                <!--            </div>-->
+                                <!--        </div>-->
 
                             </div>
                         </div>

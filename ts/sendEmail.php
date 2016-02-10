@@ -5,8 +5,9 @@ session_start();
 //require_once('class.phpmailer.php');
 require_once('PHPMailerAutoload.php');
 
+date_default_timezone_set('America/Montreal');
 
-$subject = "Tradesheet Generated at " . date("Y-m-d h:i:sa");
+$subject = "Applied Investments: " . $_SESSION['trading_group'] . " Trades " . date("Y-m-d h:i:sa");
 $body_of_your_email = "<!DOCTYPE html>
 <head>
 <style>

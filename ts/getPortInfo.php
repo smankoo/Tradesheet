@@ -10,13 +10,14 @@ else {
     // If a value was entered, let's have fun with it
     $isin = $_GET['isin'];
 }
-
+session_start();
 // Connect to the database
 require_once 'connectdb.php';
 
-
 // sending query
-$result = mysql_query("select * from portfolio where upper(isin) = upper('" . $isin . "')");
+$query = "select * from portfolio where upper(isin) = upper('" . $isin . "') and upper(trading_group) = upper('" . $_SESSION['trading_group'] . "')";
+//echo $query;
+$result = mysql_query($query);
 if (!$result) {
     die("Query to show fields from table failed");
 }

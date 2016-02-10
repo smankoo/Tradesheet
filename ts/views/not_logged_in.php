@@ -47,7 +47,8 @@ if (isset($login)) {
             </div>
             <div class="form-group">
             <input type="submit" class="btn btn-primary btn-lg btn-block" name="login" value="Sign In" />
-              <span class="pull-right"><a href="register.php">Register</a></span><span><a href="mailto:sumeet.mankoo@mail.mcgill.ca?Subject=Help%20Required%20with%20Tradesheet">Need help?</a></span>
+              <!-- <span class="pull-right"><a href="register.php">Register</a></span><span> -->
+              <a href="mailto:sumeet.mankoo@mail.mcgill.ca?subject=Tradesheet%20Tech%20Support">Need help?</a></span>
             </div>
           </form>
       </div>

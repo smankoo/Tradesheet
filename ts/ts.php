@@ -118,7 +118,6 @@
                     if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
 
                         if (xmlhttp.responseText == "NOTCURRENT") {
-                            document.getElementById("uploadPortfolioBtn").focus();
                             alert("Please upload current portfolio with run_date of today");
                         } else if (xmlhttp.responseText == "NOTFOUND") {
                             document.getElementById("isinNumber" + rowid).value = "";
@@ -131,13 +130,8 @@
 
                             var responseJson = JSON.parse(xmlhttp.responseText);
 
-                            //document.getElementById("securityName" + rowid).value = responseJson.description;
-                            //document.getElementById("securityName" + rowid).disabled = true;
                             document.getElementById("isinNumber" + rowid).value = responseJson.isin;
                             document.getElementById("isinNumber" + rowid).disabled = true;
-
-                            //document.getElementById("country" + rowid).value = responseJson.country.toLowerCase();
-                            //document.getElementById("country" + rowid).disabled = true;
 
                             if (document.getElementById("side" + rowid).value == "sell" && (document.getElementById("maxShares" + rowid).value == "" || document.getElementById("maxShares" + rowid).value == "0")) {
                                 populateMaxShares(rowid);
@@ -149,7 +143,18 @@
 
                     }
                 };
-                //alert("getSecurityInfo.php?sym=" + str);
+                // Reset the row before getting new info
+                document.getElementById("isinNumber"      + rowid).value = "";
+                document.getElementById("securityName"    + rowid).value = "";
+                document.getElementById("country"         + rowid).value = "";
+                document.getElementById("side"            + rowid).value = "";
+                document.getElementById("shares"          + rowid).value = 0;
+                document.getElementById("maxShares"       + rowid).value = 0;
+                document.getElementById("orderType"       + rowid).value = "gtc";
+                document.getElementById("mkt_or_limit"    + rowid).value = "mkt";
+                document.getElementById("limitPrice"      + rowid).value = 0;
+                document.getElementById("total"           + rowid).value = 0;
+                
                 xmlhttp.open("GET", "getSecurityInfo.php?sym=" + str, true);
                 xmlhttp.send();
             }
@@ -487,7 +492,9 @@
                 xmlhttp.onreadystatechange = function () {
                     if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
                         var responseJson = JSON.parse(xmlhttp.responseText);
-                        //alert(xmlhttp.responseText);
+                        
+                        //document.getElementById('debugBox').textContent = document.getElementById('debugBox').textContent.append("Response from Yahoo : " . responseJson . "\n");
+                        
                         stockPrice = responseJson.query.results.quote.LastTradePriceOnly;
 
                         $('#limitPrice' + rowid).removeClass('loadinggif');
@@ -508,8 +515,11 @@
                         updateRowTotal(rowid);
                     }
                 };
-
-                xmlhttp.open("GET", "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.quotes%20where%20symbol%20%3D%20%22" + yahooStr + "%22&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=", true);
+                
+                var yahooQry = "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.quotes%20where%20symbol%20%3D%20%22" + yahooStr + "%22&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=";
+                document.getElementById('debugBox').textContent = yahooQry;
+                
+                xmlhttp.open("GET", yahooQry, true);
                 xmlhttp.send();
             }
         }
@@ -773,10 +783,10 @@
                     }
                 }
             };
-            
+
             var emailBody = document.getElementById("email_body_div").innerHTML;
-            document.getElementById('debugBox').textContent = emailBody;
-            
+
+
             alert("Sending email");
             xmlhttp.open("POST", "sendEmail.php", true);
             xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -903,296 +913,292 @@
                                 <h3>Trading Group : <?php echo $_SESSION['trading_group']; ?></h3>
                             </div>
                             <div class="panel-body">
-                                <div id="upload_portfolio_div" style="display: none;">
-                                    <div style="display: block; padding: 10px; margin: auto; background-color: #FF704D; border-radius: 10px;">Current Portfolio not found</div>
-                                    <div style="padding: 10px;">
-                                        <!-- <a href="upload_portfolio2.php" class="btn btn-primary" data-toggle="modal" data-target="#myModal2" id="uploadPortfolioBtn">Upload New Portfolio</a>-->
-                                    </div>
-                                    <div id="myModal2" class="modal fade">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <!-- Content will be loaded here from "upload_portfolio2.php" file -->
+                                <?php
+                                    if ($_SESSION['admin'] == 1){
+                                        ?>
+                                    <textarea class="form-control" id="debugBox" cols="40" rows="5" placeholder="Debug Output Here"></textarea>
+                                    <?php
+                                    }
+                                ?>
+                                        <div id="upload_portfolio_div" style="display: none;">
+                                            <div style="display: block; padding: 10px; margin: auto; background-color: #FF704D; border-radius: 10px;">Current Portfolio not found</div>
+                                            <div style="padding: 10px;">
+                                                <!-- <a href="upload_portfolio2.php" class="btn btn-primary" data-toggle="modal" data-target="#myModal2" id="uploadPortfolioBtn">Upload New Portfolio</a>-->
+                                            </div>
+                                            <div id="myModal2" class="modal fade">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <!-- Content will be loaded here from "upload_portfolio2.php" file -->
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
 
-                                <p class="text-right">
-                                    <button type="button" class="btn btn-default" onclick="addRow();">Add Row</button>
-                                </p>
-                                <table id="stocks_table" class="table table-striped table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th style="width:120px;">SYMBOL</th>
-                                            <th style="width:150px;">ISIN Number</th>
-                                            <th>NAME</th>
-                                            <th style="width:60px;">COUNTRY</th>
-                                            <th style="width:60px;">SIDE</th>
-                                            <th style="width:100px;">SHARES</th>
-                                            <th style="width:100px;">Max Shares</th>
-                                            <th style="width:110px;">ORDER TYPE</th>
-                                            <th style="width:110px;">MKT/LIMIT</th>
-                                            <th style="width:150px;">PRICE</th>
-                                            <th style="width:150px;">TOTAL</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="stocks_table_tbody">
-                                        <tr>
-                                            <td>
-                                                <input class="form-control" id="symbol1" type="text" onkeyup="javascript:capitalize(this.id, this.value);" onblur="populateStockInfo(1);">
-                                            </td>
-                                            <td>
-                                                <input class="form-control" id="isinNumber1" type="text">
-                                            </td>
-                                            <td>
-                                                <input class="form-control" id="securityName1" type="text">
-                                            </td>
-                                            <td style="vertical-align: text-bottom;">
-                                                <select id="country1" onchange="updateSheetTotal();">
-                                                    <option value=""></option>
-                                                    <option value="usa">USA</option>
-                                                    <option value="canada">Canada</option>
-                                                </select>
-                                            </td>
-                                            <td>
-                                                <select id="side1" onchange="updateMaxShares(1);">
-                                                    <option value=""></option>
-                                                    <option value="buy">Buy</option>
-                                                    <option value="sell">Sell</option>
-                                                </select>
-                                            </td>
-                                            <td>
-                                                <input class="form-control" id="shares1" type="number" value="0" min="0" onblur="validateShareCount(1);" onchange="updateRowTotal(1);" onkeyup="updateRowTotal(1);" disabled>
-                                            </td>
-                                            <td>
-                                                <input class="form-control" id="maxShares1" value="0" onchange="validateShareCount(1);" disabled>
-                                            </td>
-                                            <td>
-                                                <select id="orderType1">
-                                                    <option value="gtc">GTC</option>
-                                                    <option value="day">Day</option>
-                                                </select>
-                                            </td>
-                                            <td>
-                                                <select id="mkt_or_limit1" onchange="mktLimitChanged(1);">
-                                                    <option value="mkt">MKT</option>
-                                                    <option value="limit">Limit</option>
-                                                </select>
-                                            </td>
-                                            <td>
-                                                <input class="form-control" id="limitPrice1" type="number" min="0" value="0" onchange="updateRowTotal(1);" disabled>
-                                            </td>
-                                            <td>
-                                                <input class="form-control text-right" id="total1" type="number" value="0" disabled>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                                <div style="max-width: 450px; margin: auto;">
-                                    <table id="purchase_table" class="table table-striped table-bordered" style="width:300;">
-                                        <thead>
-                                            <tr>
-                                                <th>Purchase Table</th>
-                                                <th style="width:170px;">Cash at Hand</th>
-                                                <th style="width:150px;">Sheet Total</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>CAD</td>
-                                                <td>
-                                                    <input class="form-control text-right" id="cashAtHandCAD" type="text" value='<?php getCashOnHand("CAD"); ?>' disabled>
-                                                </td>
-                                                <td>
-                                                    <input class="form-control text-right" id="sheetPurchaseTotalCAD" type="text" value="0" disabled>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>USD</td>
-                                                <td>
-                                                    <input class="form-control text-right" id="cashAtHandUSD" type="text" value='<?php getCashOnHand("USD"); ?>' disabled>
-                                                </td>
-                                                <td>
-                                                    <input class="form-control text-right" id="sheetPurchaseTotalUSD" type="text" value="0" disabled>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-
-                                    <table id="sale_table" class="table table-striped table-bordered" style="width:300;">
-                                        <thead>
-                                            <tr>
-                                                <th>Sale Table</th>
-                                                <th style="width:150px;">Sheet Total</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>CAD</td>
-                                                <td>
-                                                    <input class="form-control text-right" id="sheetSaleTotalCAD" type="text" value="0" disabled>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>USD</td>
-                                                <td>
-                                                    <input class="form-control text-right" id="sheetSaleTotalUSD" type="text" value="0" disabled>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-
-
-                                    <button type="button" id="toggleCurrencyConvBtn" class="btn btn-default" onclick="toggleCurrencyConv();">Request Currency Conversion</button>
-
-                                    <div id="currencyConvDiv" style="display: none; padding-top: 20px;">
-                                        <table id="conv_table" class="table table-striped table-bordered" style="width:300;">
+                                        <p class="text-right">
+                                            <button type="button" class="btn btn-default" onclick="addRow();">Add Row</button>
+                                        </p>
+                                        <table id="stocks_table" class="table table-striped table-bordered">
                                             <thead>
                                                 <tr>
-                                                    <th colspan="3" style="text-align: center;">Currency Conversion Request</th>
+                                                    <th style="width:120px;">SYMBOL</th>
+                                                    <th style="width:150px;">ISIN Number</th>
+                                                    <th>NAME</th>
+                                                    <th style="width:60px;">COUNTRY</th>
+                                                    <th style="width:60px;">SIDE</th>
+                                                    <th style="width:100px;">SHARES</th>
+                                                    <th style="width:100px;">Max Shares</th>
+                                                    <th style="width:110px;">ORDER TYPE</th>
+                                                    <th style="width:110px;">MKT/LIMIT</th>
+                                                    <th style="width:150px;">PRICE</th>
+                                                    <th style="width:150px;">TOTAL</th>
                                                 </tr>
                                             </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td style="vertical-align: middle;">From</td>
-                                                    <td>
-                                                        <input class="form-control text-right" id="fromValue" type="number" value="1" onkeyup="updateToCurrValue();" onchange="updateToCurrValue();">
-                                                    </td>
-                                                    <td>
-                                                        <input class="form-control text-left" id="fromCurrency" type="text" value="USD" disabled>
-                                                    </td>
-                                                </tr>
+                                            <tbody id="stocks_table_tbody">
                                                 <tr>
                                                     <td>
-                                                        <span style="font-size: 11px;">Exchange Rate</span>
+                                                        <input class="form-control" id="symbol1" type="text" onkeyup="javascript:capitalize(this.id, this.value);" onblur="populateStockInfo(1);">
                                                     </td>
                                                     <td>
-                                                        <input class="form-control text-right" id="exchangeRate" type="number" value="1" disabled>
+                                                        <input class="form-control" id="isinNumber1" type="text">
                                                     </td>
                                                     <td>
-                                                        <button type="button" id="switchCurrBtn" class="btn btn-default btn-block" onclick="switchCurr();"><span class="glyphicon glyphicon-resize-vertical"></span></button>
+                                                        <input class="form-control" id="securityName1" type="text">
                                                     </td>
-                                                </tr>
-                                                <tr>
-                                                    <td style="vertical-align: middle;">To</td>
-                                                    <td>
-                                                        <input class="form-control text-right" id="toValue" type="number" value="0" onkeyup="updateFromCurrValue();" onchange="updateFromCurrValue();">
+                                                    <td style="vertical-align: text-bottom;">
+                                                        <select id="country1" onchange="updateSheetTotal();">
+                                                            <option value=""></option>
+                                                            <option value="usa">USA</option>
+                                                            <option value="canada">Canada</option>
+                                                        </select>
                                                     </td>
                                                     <td>
-                                                        <input class="form-control text-left" id="toCurrency" type="text" value="CAD" disabled>
+                                                        <select id="side1" onchange="updateMaxShares(1);">
+                                                            <option value=""></option>
+                                                            <option value="buy">Buy</option>
+                                                            <option value="sell">Sell</option>
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <input class="form-control" id="shares1" type="number" value="0" min="0" onblur="validateShareCount(1);" onchange="updateRowTotal(1);" onkeyup="updateRowTotal(1);" disabled>
+                                                    </td>
+                                                    <td>
+                                                        <input class="form-control" id="maxShares1" value="0" onchange="validateShareCount(1);" disabled>
+                                                    </td>
+                                                    <td>
+                                                        <select id="orderType1">
+                                                            <option value="gtc">GTC</option>
+                                                            <option value="day">Day</option>
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <select id="mkt_or_limit1" onchange="mktLimitChanged(1);">
+                                                            <option value="mkt">MKT</option>
+                                                            <option value="limit">Limit</option>
+                                                        </select>
+                                                    </td>
+                                                    <td>
+                                                        <input class="form-control" id="limitPrice1" type="number" min="0" value="0" onchange="updateRowTotal(1);" disabled>
+                                                    </td>
+                                                    <td>
+                                                        <input class="form-control text-right" id="total1" type="number" value="0" disabled>
                                                     </td>
                                                 </tr>
                                             </tbody>
                                         </table>
-                                    </div>
-
-                                    <button type="button" class="btn btn-default" onclick="startOver();">Clear All</button>
-                                    <button type="button" id="btnPrepareSheet" class="btn">Prepare Sheet</button>
-
-
-                                </div>
-                                <div style="clear: both;">
-
-
-
-                                    <div id="preparedSheetDiv" style="display: none; padding-top: 20px;">
-                                        <div id="email_body_div" style=" border-style: solid; border-width: 2px;;">
-                                            <table border="1" id="preparedTable" class="table table-striped table-bordered">
+                                        <div style="max-width: 450px; margin: auto;">
+                                            <table id="purchase_table" class="table table-striped table-bordered" style="width:300;">
                                                 <thead>
                                                     <tr>
-                                                        <th style="width:120px;">SYMBOL</th>
-                                                        <th style="width:150px;">ISIN Number</th>
-                                                        <th>NAME</th>
-                                                        <th style="width:60px;">COUNTRY</th>
-                                                        <th style="width:60px;">SIDE</th>
-                                                        <th style="width:100px;">SHARES</th>
-                                                        <th style="width:110px;">ORDER TYPE</th>
-                                                        <th style="width:110px;">MKT/LIMIT</th>
-                                                        <th style="width:100px;">PRICE</th>
-                                                        <th style="width:150px;">TOTAL</th>
-                                                        <th style="width:150px;">Account#</th>
+                                                        <th>Purchase Table</th>
+                                                        <th style="width:170px;">Cash at Hand</th>
+                                                        <th style="width:150px;">Sheet Total</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody id="preparedTableTbody">
-                                                </tbody>
-
-                                            </table>
-                                            </br>
-
-                                            <div id="preppedCurrencyConvDiv" style="display: block; padding-top: 20px; max-width: 450px; margin: auto;">
-                                                <table border="1" id="prepped_conv_table" class="table table-striped table-bordered">
-                                                    <thead id="prepped_conv_table_thead">
-                                                    </thead>
-                                                    <tbody id="prepped_conv_table_tbody">
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                            </br>
-                                            <div style="display: block; padding-top: 20px; max-width: 450px; margin: auto;">
-                                                <table border="1" id="purchase_table_prepped" class="table table-striped table-bordered" style="width:300;">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Purchase Table</th>
-                                                            <th style="width:170px;">Cash at Hand</th>
-                                                            <th style="width:150px;">Sheet Total</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody id="purchase_table_prepped_tbody">
-                                                    </tbody>
-                                                </table>
-                                                </br>
-
-                                                <table border="1" id="sale_table_prepped" class="table table-striped table-bordered" style="width:300;">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Sale Table</th>
-                                                            <th style="width:150px;">Sheet Total</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody id="sale_table_prepped_tbody">
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                        <form>
-                                            <table id="email_table" class="table table-striped table-bordered" style="width:300;">
                                                 <tbody>
                                                     <tr>
-                                                        <td>McGill ID:</td>
+                                                        <td>CAD</td>
                                                         <td>
-                                                            <input class="form-control" id="userEmail" type="email" value="<?php print $_SESSION['user_email']; ?>">
+                                                            <input class="form-control text-right" id="cashAtHandCAD" type="text" value='<?php getCashOnHand("CAD"); ?>' disabled>
+                                                        </td>
+                                                        <td>
+                                                            <input class="form-control text-right" id="sheetPurchaseTotalCAD" type="text" value="0" disabled>
                                                         </td>
                                                     </tr>
                                                     <tr>
-                                                        <td>Password:</td>
+                                                        <td>USD</td>
                                                         <td>
-                                                            <input class="form-control" id="userPass" type="password" placeholder="You McGill Email Password">
+                                                            <input class="form-control text-right" id="cashAtHandUSD" type="text" value='<?php getCashOnHand("USD"); ?>' disabled>
+                                                        </td>
+                                                        <td>
+                                                            <input class="form-control text-right" id="sheetPurchaseTotalUSD" type="text" value="0" disabled>
                                                         </td>
                                                     </tr>
-                                                  <?php
-                                                        if ($_SESSION['admin'] == 1){
-                                                            ?>
-                                                    <tr>
-                                                        <td colspan="2">
-                                                            <textarea class="form-control" id="debugBox" cols="40" rows="5" placeholder="Test Output Here"></textarea>
-                                                        </td>
-                                                    </tr>
-                                                        <?php
-                                                        }
-                                                    ?>
                                                 </tbody>
                                             </table>
-                                            <input type="hidden" name="email_body_field" value="">
+
+                                            <table id="sale_table" class="table table-striped table-bordered" style="width:300;">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Sale Table</th>
+                                                        <th style="width:150px;">Sheet Total</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>CAD</td>
+                                                        <td>
+                                                            <input class="form-control text-right" id="sheetSaleTotalCAD" type="text" value="0" disabled>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>USD</td>
+                                                        <td>
+                                                            <input class="form-control text-right" id="sheetSaleTotalUSD" type="text" value="0" disabled>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+
+
+                                            <button type="button" id="toggleCurrencyConvBtn" class="btn btn-default" onclick="toggleCurrencyConv();">Request Currency Conversion</button>
+
+                                            <div id="currencyConvDiv" style="display: none; padding-top: 20px;">
+                                                <table id="conv_table" class="table table-striped table-bordered" style="width:300;">
+                                                    <thead>
+                                                        <tr>
+                                                            <th colspan="3" style="text-align: center;">Currency Conversion Request</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td style="vertical-align: middle;">From</td>
+                                                            <td>
+                                                                <input class="form-control text-right" id="fromValue" type="number" value="1" onkeyup="updateToCurrValue();" onchange="updateToCurrValue();">
+                                                            </td>
+                                                            <td>
+                                                                <input class="form-control text-left" id="fromCurrency" type="text" value="USD" disabled>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>
+                                                                <span style="font-size: 11px;">Exchange Rate</span>
+                                                            </td>
+                                                            <td>
+                                                                <input class="form-control text-right" id="exchangeRate" type="number" value="1" disabled>
+                                                            </td>
+                                                            <td>
+                                                                <button type="button" id="switchCurrBtn" class="btn btn-default btn-block" onclick="switchCurr();"><span class="glyphicon glyphicon-resize-vertical"></span></button>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="vertical-align: middle;">To</td>
+                                                            <td>
+                                                                <input class="form-control text-right" id="toValue" type="number" value="0" onkeyup="updateFromCurrValue();" onchange="updateFromCurrValue();">
+                                                            </td>
+                                                            <td>
+                                                                <input class="form-control text-left" id="toCurrency" type="text" value="CAD" disabled>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            <button type="button" class="btn btn-default" onclick="startOver();">Clear All</button>
+                                            <button type="button" id="btnPrepareSheet" class="btn">Prepare Sheet</button>
+
+
+                                        </div>
+                                        <div style="clear: both;">
 
 
 
-                                            <button id="sendEmailBtn" type="button" class="btn btn-primary" onclick="sendEmail();">Send Email</button>
-                                            <button id="startOverBtn" type="button" class="btn btn-default" onclick="startOver();">Start Over</button>
-                                        </form>
+                                            <div id="preparedSheetDiv" style="display: none; padding-top: 20px;">
+                                                <div id="email_body_div" style=" border-style: solid; border-width: 2px;;">
+                                                    <table border="1" id="preparedTable" class="table table-striped table-bordered">
+                                                        <thead>
+                                                            <tr>
+                                                                <th style="width:120px;">SYMBOL</th>
+                                                                <th style="width:150px;">ISIN Number</th>
+                                                                <th>NAME</th>
+                                                                <th style="width:60px;">COUNTRY</th>
+                                                                <th style="width:60px;">SIDE</th>
+                                                                <th style="width:100px;">SHARES</th>
+                                                                <th style="width:110px;">ORDER TYPE</th>
+                                                                <th style="width:110px;">MKT/LIMIT</th>
+                                                                <th style="width:100px;">PRICE</th>
+                                                                <th style="width:150px;">TOTAL</th>
+                                                                <th style="width:150px;">Account#</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="preparedTableTbody">
+                                                        </tbody>
 
-                                    </div>
+                                                    </table>
+                                                    </br>
 
-                                </div>
+                                                    <div id="preppedCurrencyConvDiv" style="display: block; padding-top: 20px; max-width: 450px; margin: auto;">
+                                                        <table border="1" id="prepped_conv_table" class="table table-striped table-bordered">
+                                                            <thead id="prepped_conv_table_thead">
+                                                            </thead>
+                                                            <tbody id="prepped_conv_table_tbody">
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                    </br>
+                                                    <div style="display: block; padding-top: 20px; max-width: 450px; margin: auto;">
+                                                        <table border="1" id="purchase_table_prepped" class="table table-striped table-bordered" style="width:300;">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Purchase Table</th>
+                                                                    <th style="width:170px;">Cash at Hand</th>
+                                                                    <th style="width:150px;">Sheet Total</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="purchase_table_prepped_tbody">
+                                                            </tbody>
+                                                        </table>
+                                                        </br>
+
+                                                        <table border="1" id="sale_table_prepped" class="table table-striped table-bordered" style="width:300;">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>Sale Table</th>
+                                                                    <th style="width:150px;">Sheet Total</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="sale_table_prepped_tbody">
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                                <form>
+                                                    <table id="email_table" class="table table-striped table-bordered" style="width:300;">
+                                                        <tbody>
+                                                            <tr>
+                                                                <td>McGill ID:</td>
+                                                                <td>
+                                                                    <input class="form-control" id="userEmail" type="email" value="<?php print $_SESSION['user_email']; ?>">
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>Password:</td>
+                                                                <td>
+                                                                    <input class="form-control" id="userPass" type="password" placeholder="You McGill Email Password">
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                    <input type="hidden" name="email_body_field" value="">
+
+
+
+                                                    <button id="sendEmailBtn" type="button" class="btn btn-primary" onclick="sendEmail();">Send Email</button>
+                                                    <button id="startOverBtn" type="button" class="btn btn-default" onclick="startOver();">Start Over</button>
+                                                </form>
+
+                                            </div>
+
+                                        </div>
                             </div>
                             <!--.panel-body -->
                         </div>

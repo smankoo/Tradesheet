@@ -81,7 +81,15 @@ class Login
                     // using PHP 5.5's password_verify() function to check if the provided password fits
                     // the hash of that user's password
                     if (password_verify($_POST['user_password'], $result_row->user_password_hash)) {
+                        
+                        // log the login
+                        $sql = "insert into user_logins(user_id, user_name, user_email, trading_group)
+                                select user_id, user_name, user_email, trading_group
+                                FROM users
+                                WHERE user_name= '" . $user_name . "' OR user_email = '" . $user_name . "';";
+                        $result_login_log = $this->db_connection->query($sql);
 
+                        
                         // write user data into PHP SESSION (a file on your server)
                         $_SESSION['user_name'] = $result_row->user_name;
                         $_SESSION['user_email'] = $result_row->user_email;

@@ -773,10 +773,14 @@
                     }
                 }
             };
+            
+            var emailBody = document.getElementById("email_body_div").innerHTML;
+            document.getElementById('debugBox').textContent = emailBody;
+            
             alert("Sending email");
             xmlhttp.open("POST", "sendEmail.php", true);
             xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-            xmlhttp.send("user_email=" + document.getElementById("userEmail").value + "&user_pass=" + document.getElementById("userPass").value + "&email_body=" + document.getElementById("email_body_div").innerHTML);
+            xmlhttp.send("user_email=" + document.getElementById("userEmail").value + "&user_pass=" + document.getElementById("userPass").value + "&email_body=" + encodeURIComponent(emailBody));
         }
 
         function validateSheet() {
@@ -871,10 +875,10 @@
                                 echo "admin";
                             }
                         ?>
-                        <b><?php echo $_SESSION['user_email']; ?></b>
-                        <?php echo $_SESSION['trading_group']; ?>
+                            <b><?php echo $_SESSION['user_email']; ?></b>
+                            <?php echo $_SESSION['trading_group']; ?>
                     </p>
-                    
+
                     <ul class="nav navbar-nav">
                         <li><a href="mailto:sumeet.mankoo@mail.mcgill.ca?subject=Tradesheet%20Support">Contact Support</a></li>
                         <li><a href="?logout">Logout</a></li>
@@ -1165,6 +1169,17 @@
                                                             <input class="form-control" id="userPass" type="password" placeholder="You McGill Email Password">
                                                         </td>
                                                     </tr>
+                                                  <?php
+                                                        if ($_SESSION['admin'] == 1){
+                                                            ?>
+                                                    <tr>
+                                                        <td colspan="2">
+                                                            <textarea class="form-control" id="debugBox" cols="40" rows="5" placeholder="Test Output Here"></textarea>
+                                                        </td>
+                                                    </tr>
+                                                        <?php
+                                                        }
+                                                    ?>
                                                 </tbody>
                                             </table>
                                             <input type="hidden" name="email_body_field" value="">

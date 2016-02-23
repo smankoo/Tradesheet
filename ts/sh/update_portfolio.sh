@@ -9,3 +9,4 @@ if [ $? -ne 0 ]; then
 fi
 
 /home/bitnami/scripts/load_portfolio.sh 2>&1 >> /home/bitnami/scripts/log/load_portfolio.log
+/home/bitnami/scripts/merge_new_stocks.sh 2>&1 >> /home/bitnami/scripts/log/merge_new_stocks.log

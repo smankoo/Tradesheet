@@ -88,7 +88,6 @@ class Login
                                 FROM users
                                 WHERE user_name= '" . $user_name . "' OR user_email = '" . $user_name . "';";
                         $result_login_log = $this->db_connection->query($sql);
-
                         
                         // write user data into PHP SESSION (a file on your server)
                         $_SESSION['user_name'] = $result_row->user_name;
@@ -96,7 +95,7 @@ class Login
                         $_SESSION['trading_group'] = $result_row->trading_group;
                         $_SESSION['admin'] = $result_row->admin;
                         $_SESSION['user_login_status'] = 1;
-
+                        
                     } else {
                         $this->errors[] = "Wrong password. Try again.";
                     }

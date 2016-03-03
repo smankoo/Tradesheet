@@ -15,12 +15,12 @@ function getCashOnHand($curr) {
 
     if ( strtoupper($curr) == "CAD" ){
         // sending query
-        $result = mysql_query("select base_cost from portfolio where upper(local_currency_code) = upper('" . $curr . "') and security_description = 'CASH'");
+        $result = mysql_query("select base_cost from portfolio where upper(local_currency_code) = upper('" . $curr . "') and security_description = 'CASH' and upper(trading_group) = upper('" . $_SESSION['trading_group'] . "')");
         if (!$result) {
             die("Query to show fields from table failed");
         }
     } elseif ( strtoupper($curr) == "USD" ) {
-        $result = mysql_query("select base_cost from portfolio where upper(local_currency_code)  = upper('" . $curr . "') and security_description = 'NON-BASE CURRENCY'");
+        $result = mysql_query("select base_cost from portfolio where upper(local_currency_code)  = upper('" . $curr . "') and security_description = 'NON-BASE CURRENCY' and upper(trading_group) = upper('" . $_SESSION['trading_group'] . "')");
         if (!$result) {
             die("Query to show fields from table failed");
         }

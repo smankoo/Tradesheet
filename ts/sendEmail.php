@@ -16,7 +16,7 @@ $body_of_your_email = "<!DOCTYPE html>
 }
 
 body {
-  background: steelblue;
+  background: none;
   font-family: \"Open Sans\", arial;
 }
 

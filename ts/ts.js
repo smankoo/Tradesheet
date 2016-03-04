@@ -58,6 +58,12 @@ function updateMaxShares(rowid) {
     updateSheetTotal();
 }
 
+function populateStockInfo(rowid) {
+    //Get the ISIN Number from DB
+    populateStockInfoFromDB(rowid);
+    getStockInfoYahoo(rowid);
+}
+
 function populateStockInfoFromDB(rowid) {
     var str = document.getElementById("symbol" + rowid).value;
 
@@ -65,20 +71,19 @@ function populateStockInfoFromDB(rowid) {
         document.getElementById("isinNumber" + rowid).value = "";
         return;
     } else {
-
         if (window.XMLHttpRequest) {
             // code for IE7+, Firefox, Chrome, Opera, Safari
-            xmlhttp = new XMLHttpRequest();
+            xmlhttpDB = new XMLHttpRequest();
         } else {
             // code for IE6, IE5
-            xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+            xmlhttpDB = new ActiveXObject("Microsoft.XMLHTTP");
         }
-        xmlhttp.onreadystatechange = function () {
-            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+        xmlhttpDB.onreadystatechange = function () {
+            if (xmlhttpDB.readyState == 4 && xmlhttpDB.status == 200) {
+                if (xmlhttpDB.responseText == "NOTCURRENT") {
+                    alert("Stale portfolio found. Contact Admin.");
+                } else if (xmlhttpDB.responseText == "NOTFOUND") {
 
-                if (xmlhttp.responseText == "NOTCURRENT") {
-                    alert("Please upload current portfolio with run_date of today");
-                } else if (xmlhttp.responseText == "NOTFOUND") {
                     document.getElementById("isinNumber" + rowid).value = "";
                     document.getElementById("isinNumber" + rowid).disabled = false;
 
@@ -87,7 +92,7 @@ function populateStockInfoFromDB(rowid) {
 
                 } else {
 
-                    var responseJson = JSON.parse(xmlhttp.responseText);
+                    var responseJson = JSON.parse(xmlhttpDB.responseText);
 
                     document.getElementById("isinNumber" + rowid).value = responseJson.isin;
                     document.getElementById("isinNumber" + rowid).disabled = true;
@@ -95,11 +100,7 @@ function populateStockInfoFromDB(rowid) {
                     if (document.getElementById("side" + rowid).value == "sell" && (document.getElementById("maxShares" + rowid).value == "" || document.getElementById("maxShares" + rowid).value == "0")) {
                         populateMaxShares(rowid);
                     }
-
-                    // Let's get stock price
-                    getStockInfoYahoo(rowid);
                 }
-
             }
         };
 
@@ -115,9 +116,84 @@ function populateStockInfoFromDB(rowid) {
         //                document.getElementById("limitPrice"      + rowid).value = 0;
         //                document.getElementById("total"           + rowid).value = 0;
         //                
-        xmlhttp.open("GET", "getSecurityInfo.php?sym=" + str, true);
+        
+        xmlhttpDB.open("GET", "getSecurityInfo.php?sym=" + str, true);
+        xmlhttpDB.send();
+    }
+}
+
+function getStockInfoYahoo(rowid) {
+    $('#securityName' + rowid).addClass('loadinggif');
+    $("#limitPrice" + rowid).addClass('loadinggif');
+
+    var str = document.getElementById("symbol" + rowid).value;
+
+    // Check for blankness
+    if (str == "") {
+        document.getElementById("limitPrice" + rowid).value = "";
+        return;
+    } else {
+
+        // Convert to Yahoo String
+        var stockName = str.substr(0, str.indexOf(" "));
+        var stockCountry = str.substr(str.indexOf(" ") + 1);
+        // Convert / to - for yahoo lookup
+        var yahooStr = stockName.replace("/", "-");;
+
+        if (stockCountry == "US") {
+            document.getElementById("country" + rowid).value = "usa";
+            document.getElementById("country" + rowid).disabled = true;
+        } else if (stockCountry == "CN") {
+            document.getElementById("country" + rowid).value = "canada";
+            document.getElementById("country" + rowid).disabled = true;
+            var yahooStr = yahooStr + ".TO";
+        } else {
+            document.getElementById("country" + rowid).disabled = false;
+        }
+
+        if (window.XMLHttpRequest) {
+            // code for IE7+, Firefox, Chrome, Opera, Safari
+            xmlhttp = new XMLHttpRequest();
+        } else {
+            // code for IE6, IE5
+            xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+        }
+        xmlhttp.onreadystatechange = function () {
+            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                var responseJson = JSON.parse(xmlhttp.responseText);
+
+                //document.getElementById('debugBox').textContent = document.getElementById('debugBox').textContent.append("Response from Yahoo : " . responseJson . "\n");
+
+                stockPrice = responseJson.query.results.quote.LastTradePriceOnly;
+
+                $('#limitPrice' + rowid).removeClass('loadinggif');
+
+                document.getElementById("limitPrice" + rowid).value = stockPrice;
+                document.getElementById("limitPrice" + rowid).disabled = true;
+
+                $('#securityName' + rowid).removeClass('loadinggif');
+
+                document.getElementById("securityName" + rowid).value = responseJson.query.results.quote.Name;
+                document.getElementById("securityName" + rowid).disabled = true;
+
+                if (document.getElementById("side" + rowid).value == "sell" && (document.getElementById("maxShares" + rowid).value == "" || document.getElementById("maxShares" + rowid).value == "0")) {
+                    populateMaxShares(rowid);
+                }
+
+                updateRowTotal(rowid);
+            }
+        };
+
+        var yahooQry = "getSecurityInfoYahoo.php?sym=" + yahooStr;
+        //document.getElementById('debugBox').textContent = yahooQry;
+
+        xmlhttp.open("GET", yahooQry, true);
         xmlhttp.send();
     }
+}
+
+function debugOut (message){
+    document.getElementById('debugBox').textContent = document.getElementById('debugBox').textContent + message + "\n";
 }
 
 function populateMaxShares(rowid) {
@@ -345,11 +421,6 @@ function capitalize(textboxid, str) {
     document.getElementById(textboxid).value = str;
 }
 
-function populateStockInfo(rowid) {
-    //Get the ISIN Number from DB
-    populateStockInfoFromDB(rowid);
-
-}
 
 function getStockInfoYahoo_bak(rowid) {
     $('#securityName' + rowid).addClass('loadinggif');
@@ -416,76 +487,6 @@ function getStockInfoYahoo_bak(rowid) {
         };
 
         var yahooQry = "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20yahoo.finance.quotes%20where%20symbol%20%3D%20%22" + yahooStr + "%22&format=json&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=";
-        document.getElementById('debugBox').textContent = yahooQry;
-
-        xmlhttp.open("GET", yahooQry, true);
-        xmlhttp.send();
-    }
-}
-function getStockInfoYahoo(rowid) {
-    $('#securityName' + rowid).addClass('loadinggif');
-    $("#limitPrice" + rowid).addClass('loadinggif');
-
-    var str = document.getElementById("symbol" + rowid).value;
-
-    // Check for blankness
-    if (str == "") {
-        document.getElementById("limitPrice" + rowid).value = "";
-        return;
-    } else {
-
-        // Convert to Yahoo String
-        var stockName = str.substr(0, str.indexOf(" "));
-        var stockCountry = str.substr(str.indexOf(" ") + 1);
-        // Convert / to - for yahoo lookup
-        var yahooStr = stockName.replace("/", "-");;
-
-
-        if (stockCountry == "US") {
-            document.getElementById("country" + rowid).value = "usa";
-            document.getElementById("country" + rowid).disabled = true;
-        } else if (stockCountry == "CN") {
-            document.getElementById("country" + rowid).value = "canada";
-            document.getElementById("country" + rowid).disabled = true;
-            var yahooStr = yahooStr + ".TO";
-        } else {
-            document.getElementById("country" + rowid).disabled = false;
-        }
-
-        if (window.XMLHttpRequest) {
-            // code for IE7+, Firefox, Chrome, Opera, Safari
-            xmlhttp = new XMLHttpRequest();
-        } else {
-            // code for IE6, IE5
-            xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-        }
-        xmlhttp.onreadystatechange = function () {
-            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-                var responseJson = JSON.parse(xmlhttp.responseText);
-
-                //document.getElementById('debugBox').textContent = document.getElementById('debugBox').textContent.append("Response from Yahoo : " . responseJson . "\n");
-
-                stockPrice = responseJson.query.results.quote.LastTradePriceOnly;
-
-                $('#limitPrice' + rowid).removeClass('loadinggif');
-
-                document.getElementById("limitPrice" + rowid).value = stockPrice;
-                document.getElementById("limitPrice" + rowid).disabled = true;
-
-                $('#securityName' + rowid).removeClass('loadinggif');
-
-                document.getElementById("securityName" + rowid).value = responseJson.query.results.quote.Name;
-                document.getElementById("securityName" + rowid).disabled = true;
-
-                if (document.getElementById("side" + rowid).value == "sell" && (document.getElementById("maxShares" + rowid).value == "" || document.getElementById("maxShares" + rowid).value == "0")) {
-                    populateMaxShares(rowid);
-                }
-
-                updateRowTotal(rowid);
-            }
-        };
-
-        var yahooQry = "getSecurityInfoYahoo.php?sym=" + yahooStr;
         document.getElementById('debugBox').textContent = yahooQry;
 
         xmlhttp.open("GET", yahooQry, true);

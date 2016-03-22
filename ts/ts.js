@@ -260,7 +260,7 @@ function updateSheetTotal() {
     for (i = 0; i < oInputs.length; i++) {
         // loop through and find <input type="text"/>
         if (oInputs[i].type == 'number' && oInputs[i].id.substring(0, 5) == 'total') {
-            calc_row_num = oInputs[i].id.substring(5, 6);
+            calc_row_num = oInputs[i].id.substring(5);
 
             if (document.getElementById("side" + calc_row_num).value == "buy") {
                 if (document.getElementById("country" + calc_row_num).value == "canada") {

@@ -1,5 +1,11 @@
 <?php
-session_start();
+
+require_once("classes/Login.php");
+$login = new Login();
+if ($login->isUserLoggedIn() == false) {
+    include("views/not_logged_in.php");
+}
+
 
 // Check to make sure some value of the symbol was entered
 if (empty($_GET['sym'])) {

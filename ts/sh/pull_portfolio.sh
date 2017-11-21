@@ -5,7 +5,7 @@ echo "OK, starting now..."
 
 cd /home/bitnami/cibc-box
 
-sftp -b /dev/stdin  wbnbno04@ftp5.pershing.com <<EOF
+sftp -b /dev/stdin  <source_ftp_server> <<EOF
 get TRDSHT*
 exit
 EOF
